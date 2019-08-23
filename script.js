@@ -3,7 +3,7 @@
 const base_url = 'https://rt.data.gov.hk/';
 $(document).ajaxError(
     function (/** Event */ event, /** XMLHttpRequest */ jqXHR, /** Object */ ajaxSettings, /** String */ thrownError) {
-        alert(('AJAX call to ' + $xhr.responseURL + ' failed: ' + thrownError).trim());
+        alert(('AJAX call to ' + jqXHR.responseURL + ' failed: ' + thrownError).trim());
     }
 );
 
