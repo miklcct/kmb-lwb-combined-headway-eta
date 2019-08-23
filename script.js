@@ -1,8 +1,6 @@
 'use strict';
 
 const base_url = 'https://rt.data.gov.hk/';
-const company_ids = ['CTB', 'NWFB'];
-
 $(document).ajaxError(
     function (/** Event */ event, /** XMLHttpRequest */ jqXHR, /** Object */ ajaxSettings, /** String */ thrownError) {
         alert(('AJAX call to ' + $xhr.responseURL + ' failed: ' + thrownError).trim());
@@ -23,9 +21,24 @@ class Route {
     }
 }
 
+class Stop {
+    stop;
+    name;
+    seq;
+    dir;
+
+    constructor(/** String */ stop, /** String */ name, /** Number */ seq, /** String */ dir) {
+        this.stop = stop;
+        this.name = name;
+        this.seq = seq;
+        this.dir = dir;
+    }
+}
+
 let routes = [];
 
-company_ids.forEach(
+let company_count = 2;
+['CTB', 'NWFB'].forEach(
     function (/** String */ company_id) {
         $.getJSON(
             base_url + '/v1/transport/citybus-nwfb/route/' + company_id
@@ -87,14 +100,16 @@ company_ids.forEach(
                         return i >= a_segments.length ? i >= b_segments.length ? 0 : -1 : 1;
                     }
                 );
-                $('#route_list').empty().append($('<option/>')).append(
-                    routes.map(
-                        function (/** Route */ route) {
-                            return $('<option></option>').attr('value', route.route)
-                                .text(route.route + ' ' +  route.orig + ' – ' + route.dest);
-                        }
-                    )
-                );
+                if (--company_count === 0) {
+                    $('#route_list').empty().append($('<option/>')).append(
+                        routes.map(
+                            function (/** Route */ route) {
+                                return $('<option></option>').attr('value', route.route)
+                                    .text(route.route + ' ' + route.orig + ' – ' + route.dest);
+                            }
+                        )
+                    ).removeAttr('disabled');
+                }
             }
         )
     }
@@ -105,6 +120,74 @@ $(document).ready(
         $('#route_list').change(
             function () {
                 $('#route').val($('#route_list option:selected').first().val());
+                $('#route_submit').click();
+            }
+        );
+        let route;
+        let direction;
+        const process = function () {
+            let stops = [];
+            $('#stop_list').empty().attr('disabled', 'disabled');
+            $('#switch_direction').attr('disabled', 'disabled');
+            // FIXME: handle one-way and circular routes
+            $('#direction').text((direction ? route.dest : route.orig) + ' → ' + (direction ? route.orig : route.dest));
+            $.getJSON(
+                base_url + '/v1/transport/citybus-nwfb/route-stop/' + route.co + '/' + route.route + '/'
+                + (direction ? 'inbound' : 'outbound')
+                , function (/** Object */ data) {
+                    const stop_list = data.data;
+                    let stop_count = stop_list.length;
+                    stop_list.forEach(
+                        function (/** Object */ stop_data) {
+                            $.getJSON(
+                                base_url + '/v1/transport/citybus-nwfb/stop/' + stop_data.stop
+                                , function (/** Object */ stop_detail) {
+                                    stops.push(new Stop(stop_data.stop, stop_detail.data.name_en, +stop_data.seq, stop_data.dir));
+                                    if (--stop_count === 0) {
+                                        stops.sort(
+                                            function (/** Stop */ a, /** Stop */ b) {
+                                                return a.seq - b.seq;
+                                            }
+                                        );
+                                        $('#stop_list').append($('<option/>')).append(
+                                            stops.map(
+                                                function (/** Stop */ stop) {
+                                                    return $('<option></option>').attr('value', stop.stop).text(stop.name);
+                                                }
+                                            )
+                                        ).removeAttr('disabled');
+                                        $('#switch_direction').removeAttr('disabled');
+                                    }
+                                }
+                            );
+                        }
+                    );
+                }
+            );
+        };
+
+        $('#route_submit').click(
+            function () {
+                const input = $('#route').val();
+                route = routes.find(
+                    function (/** Route */ route) {
+                        return route.route === input.trim();
+                    }
+                );
+                if (route === undefined) {
+                    alert('Invalid route');
+                    return false;
+                }
+                $('#route_list').val(route.route);
+                direction = false;
+                process();
+                return false;
+            }
+        );
+        $('#switch_direction').click(
+            function () {
+                direction = !direction;
+                process();
             }
         );
     }

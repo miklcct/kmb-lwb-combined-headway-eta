@@ -10,7 +10,12 @@
         <form>
             <p>
                 <label>Enter the route number: <input id="route" name="route" maxlength="4" /></label><br/>
-                <label>or choose a route in the list: <select id="route_list"><option value=""/></select></label>
+                <label>or choose a route in the list: <select id="route_list" disabled="disabled"/></label><br/>
+                <input type="submit" id="route_submit"/>
+            </p>
+            <p>
+                Direction: <span id="direction"/> <button id="switch_direction" type="button" disabled="disabled">Switch direction</button> <br/>
+                <label>Choose a stop in the list: <select id="stop_list" disabled="disabled"/></label>
             </p>
         </form>
     </body>
