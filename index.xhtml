@@ -7,16 +7,26 @@
         <title>Title</title>
     </head>
     <body>
+        <p id="loading">
+            Loading data, please wait.
+            <br/>
+            <span id="company_count">2</span> company(s) remaining.
+            <span id="route_count">0</span> route(s) remaining.
+            <span id="stop_count">0</span> stop(s) remaining.
+        </p>
         <form>
             <p>
-                <label>Enter the route number: <input id="route" name="route" maxlength="4" /></label><br/>
+                <label>Enter the route number: <input id="route" name="route" maxlength="4" disabled="disabled"/></label><br/>
                 <label>or choose a route in the list: <select id="route_list" disabled="disabled"/></label><br/>
-                <input type="submit" id="route_submit"/>
-            </p>
-            <p>
-                Direction: <span id="direction"/> <button id="switch_direction" type="button" disabled="disabled">Switch direction</button> <br/>
-                <label>Choose a stop in the list: <select id="stop_list" disabled="disabled"/></label>
+                <input type="submit" id="route_submit" disabled="disabled"/>
             </p>
         </form>
+        <p>
+            Direction: <span id="direction"/> <button id="switch_direction" type="button" disabled="disabled">Switch direction</button> <br/>
+            <label>Choose a stop in the list: <select id="stop_list" disabled="disabled"/></label>
+        </p>
+        <p>
+            <label>Route serving the stop selected: <select multiple="multiple" disabled="disabled" id="common_route_list"/></label>
+        </p>
     </body>
 </html>
