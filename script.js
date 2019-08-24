@@ -31,8 +31,7 @@ class Stop {
 }
 
 class RouteStop {
-    constructor(/** String */ stop_id, /** String */ route_id, /** Boolean */ direction, /** Number */ sequence) {
-        this.sequence = sequence;
+    constructor(/** String */ stop_id, /** String */ route_id, /** Boolean */ direction) {
         this.stop_id = stop_id;
         this.route_id = route_id;
         this.direction = direction;
@@ -41,15 +40,14 @@ class RouteStop {
 
 RouteStop.compare = function (/** RouteStop */ a, /** RouteStop */ b) {
     return a.route_id === b.route_id
-        ? a.direction === b.direction ? a.sequence - b.sequence : a.direction - b.direction
+        ? a.direction - b.direction
         : compare_route_id(a.route_id, b.route_id);
 };
 
 class Eta {
-    constructor(/** String */ route_id, /** Boolean */ direction, /** String */ sequence, /** Date */ time, /** String */ destination, /** String */ remark) {
+    constructor(/** String */ route_id, /** Boolean */ direction, /** Date */ time, /** String */ destination, /** String */ remark) {
         this.route_id = route_id;
         this.direction = direction;
-        this.sequence = sequence;
         this.time = time;
         this.destination = destination;
         this.remark = remark;
@@ -143,7 +141,7 @@ function get_route_stop(/** string */ route_id) {
                         route_stop[route_id][direction] = [];
                         stop_list.forEach(
                             function (/** Object */ json) {
-                                const item = new RouteStop(json.stop, json.route, json.dir === 'I', json.seq);
+                                const item = new RouteStop(json.stop, json.route, json.dir === 'I');
 
                                 // FIXME: handle circular route
                                 get_stop(json.stop);
@@ -209,7 +207,6 @@ function get_eta(/** Number */ batch, /** String */ company_id, /** String */ st
                             new Eta(
                                 json.route
                                 , json.dir === 'I'
-                                , json.seq
                                 , new Date(json.eta)
                                 , json.dest_en
                                 , json.rmk_en
@@ -413,7 +410,7 @@ $(document).ready(
                                 const inner_direction = data.direction;
                                 const inner_route = routes[route_id];
                                 const $element = $('<option></option>')
-                                    .attr('value', inner_route.company + '-' + route_id + '-' + (inner_direction ? '1' : '') + '-' + data.sequence)
+                                    .attr('value', inner_route.company + '-' + route_id + '-' + (inner_direction ? '1' : ''))
                                     .text(route_id + ' ' + (inner_direction ? inner_route.destination : inner_route.origin) + ' → ' + (inner_direction ? inner_route.origin : inner_route.destination));
                                 if (inner_route === route && inner_direction === !!$('#direction').val()) {
                                     $element.attr('selected', 'selected');
