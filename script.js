@@ -7,10 +7,20 @@
  * 3. routes which passes the same stop in the same direction twice (e.g. 2X Shau Kei Wan， 796X Tseung Kwan O Industrial Estate)
  */
 
+(function () {
+    const old = $.getJSON;
+    $.getJSON = function (url, data, callback) {
+        const result = old(url, data, callback);
+        result.url = url;
+        return result;
+    }
+})();
+
 const base_url = 'https://rt.data.gov.hk/';
 $(document).ajaxError(
     function (/** Event */ event, /** XMLHttpRequest */ jqXHR, /** Object */ ajaxSettings, /** String */ thrownError) {
-        alert(('AJAX call to ' + jqXHR.responseURL + ' failed: ' + thrownError).trim());
+        alert(('AJAX call to ' + jqXHR.url + ' failed: ' + thrownError).trim());
+        window.location.reload();
     }
 );
 
