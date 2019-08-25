@@ -318,7 +318,38 @@ function get_all_etas(/** String */ stop_id, /** Array */ selections) {
 }
 get_all_etas.batch = 0;
 
-['CTB', 'NWFB'].forEach(get_route_list);
+(function () {
+    let load_from_cache = false;
+    if (typeof Storage !== 'undefined') {
+        try {
+            const storage_updated = localStorage.getItem('updated');
+            if (storage_updated !== null) {
+                const route_data_updated = new Date(storage_updated);
+                // update time daily: 03:00 & 21:00 (Hong Kong Time)
+                const now = new Date();
+                const getChangeover = function (hour) {
+                    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - (now.getUTCHours() < hour), hour, 0, 0))
+                };
+                const time0300 = getChangeover(19);
+                const time2100 = getChangeover(13);
+                if (!(route_data_updated.getTime() < time0300.getTime() || route_data_updated.getTime() < time2100.getTime())) {
+                    load_from_cache = true;
+                }
+            }
+        } catch (e) {
+            // do not do anything if local storage is corrupted
+        }
+    }
+    if (load_from_cache) {
+        routes = JSON.parse(localStorage.getItem('routes'));
+        stops = JSON.parse(localStorage.getItem('stops'));
+        route_stop = JSON.parse(localStorage.getItem('route_stop'));
+        stop_route = JSON.parse(localStorage.getItem('stop_route'));
+        get_route_list.remaining = 0;
+    } else {
+        ['CTB', 'NWFB'].forEach(get_route_list);
+    }
+})();
 
 function enable_when_ready() {
     $stop_count.text(get_stop.remaining);
@@ -331,6 +362,13 @@ function enable_when_ready() {
                 return compare_route_id(a.id, b.id);
             }
         );
+        if (typeof Storage !== 'undefined') {
+            localStorage.setItem('routes', JSON.stringify(routes));
+            localStorage.setItem('stops', JSON.stringify(stops));
+            localStorage.setItem('route_stop', JSON.stringify(route_stop));
+            localStorage.setItem('stop_route', JSON.stringify(stop_route));
+            localStorage.setItem('updated', (new Date()).getTime());
+        }
         $route_list.empty().append($('<option/>')).append(
             routes_array.map(
                 function (/** Route */ route) {
@@ -406,8 +444,10 @@ $(document).ready(
             $stop_list.empty().append($('<option/>')).append(
                 route_stop[route.id][+direction].map(
                     function (/** RouteStop */ route_stop) {
-                        const stop = stops[route_stop.stop_id];
-                        return $('<option></option>').attr('value', stop.id).text(stop.id + ' ' + stop.name);
+                        if (route_stop !== null) {
+                            const stop = stops[route_stop.stop_id];
+                            return $('<option></option>').attr('value', stop.id).text(stop.id + ' ' + stop.name);
+                        }
                     }
                 )
             ).removeAttr('disabled');
