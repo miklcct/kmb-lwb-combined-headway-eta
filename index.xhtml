@@ -2,23 +2,35 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
     <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <link rel="stylesheet" href="style.css" />
         <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.4.1.min.js"></script>
         <script src="script.js"></script>
-        <title>Title</title>
+        <title>Citybus &amp; NWFB combined ETA</title>
     </head>
     <body>
+        <table id="eta">
+            <thead>
+                <tr><th>Time</th><th>Route</th><th>Destination</th><th>Remark</th></tr>
+            </thead>
+            <tfoot>
+                <tr id="eta_loading"><td colspan="4">Loading</td></tr>
+                <tr><td colspan="4">Last updated: <span id="eta_last_updated"/></td></tr>
+            </tfoot>
+            <tbody />
+        </table>
         <p id="loading">
             Loading data, please wait.
             <br/>
-            <span id="company_count">2</span> company(s) remaining.
-            <span id="route_count">0</span> route(s) remaining.
+            <span id="company_count">2</span> company(s) remaining.<br/>
+            <span id="route_count">0</span> route(s) remaining.<br/>
             <span id="stop_count">0</span> stop(s) remaining.
         </p>
         <form>
             <p>
                 <label>Enter the route number: <input id="route" name="route" maxlength="4"/></label><br/>
-                <label>or choose a route in the list: <select id="route_list"/></label><br/>
-                <input type="hidden" name="direction" id="direction" value=""/>
+                <label>or choose a route in the list:<br/><select id="route_list"/></label><br/>
+                <input type="hidden" name="direction" id="direction" value="O"/>
                 <input type="submit" id="route_submit"/>
             </p>
         </form>
@@ -32,11 +44,5 @@
             </p>
             <button type="submit" id="selection_submit">Test</button>
         </form>
-        <table id="eta">
-            <thead>
-                <tr><th>Time</th><th>Route</th><th>Destination</th><th>Remark</th></tr>
-            </thead>
-            <tbody />
-        </table>
     </body>
 </html>

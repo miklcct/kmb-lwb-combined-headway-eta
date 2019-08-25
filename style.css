@@ -1,0 +1,16 @@
+@charset "UTF-8";
+
+* {
+    box-sizing: border-box;
+    word-wrap: break-word;
+    max-width: 100%;
+    table-layout: fixed;
+}
+
+table {
+    width: 100%;
+}
+
+select {
+    width: 100%;
+}
