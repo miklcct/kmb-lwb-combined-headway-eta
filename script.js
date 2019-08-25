@@ -466,6 +466,7 @@ $(document).ready(
         }
 
         $route.attr('disabled', 'disabled');
+        $eta_loading.css('display', 'none');
 
         $route_list.attr('disabled', 'disabled').change(
             function () {
