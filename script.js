@@ -438,8 +438,6 @@ $(document).ready(
 
         function load_route(/** Route */ route, /** Boolean */ direction) {
             $common_route_list.empty();
-            etas = [];
-            // FIXME: handle one-way and circular routes
             $('#direction_text').text((direction ? route.destination : route.origin) + ' → ' + (direction ? route.origin : route.destination));
             $stop_list.empty().append($('<option/>')).append(
                 route_stop[route.id][+direction].map(
@@ -452,7 +450,11 @@ $(document).ready(
                 )
             ).removeAttr('disabled');
 
-            $switch_direction.removeAttr('disabled');
+            if (route_stop[route.id][1 - direction].length === 0) {
+                $switch_direction.attr('disabled', 'disabled');
+            } else {
+                $switch_direction.removeAttr('disabled');
+            }
         }
 
         $route.attr('disabled', 'disabled');
