@@ -341,14 +341,19 @@ get_all_etas.batch = 0;
         }
     }
     if (load_from_cache) {
-        routes = JSON.parse(localStorage.getItem('routes'));
-        stops = JSON.parse(localStorage.getItem('stops'));
-        route_stop = JSON.parse(localStorage.getItem('route_stop'));
-        stop_route = JSON.parse(localStorage.getItem('stop_route'));
-        get_route_list.remaining = 0;
-    } else {
-        ['CTB', 'NWFB'].forEach(get_route_list);
+        try {
+            routes = JSON.parse(localStorage.getItem('routes'));
+            stops = JSON.parse(localStorage.getItem('stops'));
+            route_stop = JSON.parse(localStorage.getItem('route_stop'));
+            stop_route = JSON.parse(localStorage.getItem('stop_route'));
+            get_route_list.remaining = 0;
+            return;
+        } catch (e) {
+            // auto fallback without cache
+        }
     }
+    localStorage.clear();
+    ['CTB', 'NWFB'].forEach(get_route_list);
 })();
 
 function enable_when_ready() {
@@ -363,11 +368,13 @@ function enable_when_ready() {
             }
         );
         if (typeof Storage !== 'undefined') {
-            localStorage.setItem('routes', JSON.stringify(routes));
-            localStorage.setItem('stops', JSON.stringify(stops));
-            localStorage.setItem('route_stop', JSON.stringify(route_stop));
-            localStorage.setItem('stop_route', JSON.stringify(stop_route));
-            localStorage.setItem('updated', (new Date()).getTime().toString());
+            if (localStorage.getItem('updated') === null) {
+                localStorage.setItem('routes', JSON.stringify(routes));
+                localStorage.setItem('stops', JSON.stringify(stops));
+                localStorage.setItem('route_stop', JSON.stringify(route_stop));
+                localStorage.setItem('stop_route', JSON.stringify(stop_route));
+                localStorage.setItem('updated', (new Date()).getTime().toString());
+            }
         }
         $route_list.empty().append($('<option/>')).append(
             routes_array.map(
