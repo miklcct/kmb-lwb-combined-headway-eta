@@ -442,7 +442,7 @@ $(document).ready(
             $stop_list.empty().append($('<option/>')).append(
                 route_stop[route.id][+direction].map(
                     function (/** RouteStop */ route_stop) {
-                        if (route_stop !== null) {
+                        if (route_stop !== null && route_stop !== undefined) {
                             const stop = stops[route_stop.stop_id];
                             return $('<option></option>').attr('value', stop.id).text(stop.id + ' ' + stop.name);
                         }
