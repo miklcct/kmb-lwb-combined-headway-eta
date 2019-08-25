@@ -324,7 +324,7 @@ get_all_etas.batch = 0;
         try {
             const storage_updated = localStorage.getItem('updated');
             if (storage_updated !== null) {
-                const route_data_updated = new Date(storage_updated);
+                const route_data_updated = new Date(+storage_updated);
                 // update time daily: 03:00 & 21:00 (Hong Kong Time)
                 const now = new Date();
                 const getChangeover = function (hour) {
@@ -367,7 +367,7 @@ function enable_when_ready() {
             localStorage.setItem('stops', JSON.stringify(stops));
             localStorage.setItem('route_stop', JSON.stringify(route_stop));
             localStorage.setItem('stop_route', JSON.stringify(stop_route));
-            localStorage.setItem('updated', (new Date()).getTime());
+            localStorage.setItem('updated', (new Date()).getTime().toString());
         }
         $route_list.empty().append($('<option/>')).append(
             routes_array.map(
