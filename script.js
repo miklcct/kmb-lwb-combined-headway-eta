@@ -86,7 +86,7 @@ class Eta {
 }
 
 Eta.compare = function (/** Eta */ a, /** Eta */ b) {
-    return (a.time === null ? 1 / 0 : a.time.getTime()) - (b.time === null ? 1 / 0 : b.time.getTime());
+    return (a.time === null ? Infinity : a.time.getTime()) - (b.time === null ? Infinity : b.time.getTime());
 };
 
 function compare_route_id(/** String */ a, /** String */ b) {
