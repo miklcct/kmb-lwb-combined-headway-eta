@@ -23,7 +23,7 @@ Date.prototype.hhmmss = function () {
 (function () {
     $(document).ajaxError(
         function (/** Event */ event, /** XMLHttpRequest */ jqXHR, /** Object */ ajaxSettings, /** String */ thrownError) {
-            if (ajaxSettings.fail_count === undefined) {
+            if (!ajaxSettings.hasOwnProperty('fail_count')) {
                 ajaxSettings.fail_count = 0;
             }
             ++ajaxSettings.fail_count;
@@ -165,7 +165,9 @@ function get_stop(/** string */ stop_id) {
         $.getJSON(
             base_url + '/v1/transport/citybus-nwfb/stop/' + stop_id
             , function (/** Object */ json) {
-                stops[stop_id] = new Stop(json.data.stop, json.data.name_en);
+                if (json.data.hasOwnProperty('stop')) {
+                    stops[stop_id] = new Stop(json.data.stop, json.data.name_en);
+                }
                 --get_stop.remaining;
             }
         );
@@ -194,7 +196,7 @@ function get_route_stop(/** string */ route_id) {
 
                                 // I assume seq will not duplicate
                                 route_stop[route_id][+direction][json.seq] = item;
-                                if (stop_route[json.stop] === undefined) {
+                                if (!stop_route.hasOwnProperty(json.stop)) {
                                     stop_route[json.stop] = [];
                                 }
                                 stop_route[json.stop].push(item);
@@ -276,9 +278,9 @@ function get_eta(/** Number */ batch, /** String */ company_id, /** String */ st
                     );
                 $eta_loading.css('display', 'none');
                 $eta_last_updated.text((new Date).hhmmss());
-                if (get_all_etas.handler !== undefined) {
+                if (get_all_etas.handler !== null) {
                     window.clearTimeout(get_all_etas.handler);
-                    get_all_etas.handler = undefined;
+                    get_all_etas.handler = null;
                 }
                 get_all_etas.handler = window.setTimeout(
                     function () {
@@ -302,7 +304,7 @@ function get_all_etas(/** String */ stop_id, /** Array */ selections) {
     selections.forEach(
         function (value) {
             const segments = value.split('-');
-            if (data[segments[0]] === undefined) {
+            if (!data.hasOwnProperty(segments[0])) {
                 data[segments[0]] = new Set();
             }
             data[segments[0]].add(segments[1]);
@@ -319,10 +321,15 @@ function get_all_etas(/** String */ stop_id, /** Array */ selections) {
     );
 }
 get_all_etas.batch = 0;
+get_all_etas.handler = null;
+
+function is_storage_available() {
+    return window.hasOwnProperty('localStorage');
+}
 
 (function () {
     let load_from_cache = false;
-    if (typeof localStorage !== 'undefined') {
+    if (is_storage_available()) {
         try {
             const storage_updated = localStorage.getItem('updated');
             if (storage_updated !== null) {
@@ -369,7 +376,7 @@ function enable_when_ready() {
                 return compare_route_id(a.id, b.id);
             }
         );
-        if (typeof localStorage !== 'undefined') {
+        if (is_storage_available()) {
             if (localStorage.getItem('updated') === null) {
                 localStorage.setItem('routes', JSON.stringify(routes));
                 localStorage.setItem('stops', JSON.stringify(stops));
@@ -452,7 +459,7 @@ $(document).ready(
                     function (/** RouteStop */ route_stop) {
                         const stop_id = route_stop.stop_id;
                         const stop = stops[stop_id];
-                        return $('<option></option>').attr('value', stop_id).text(stop_id + ' ' + (stop.name === undefined ? '' : stop.name));
+                        return $('<option></option>').attr('value', stop_id).text(stop_id + ' ' + (stop === null ? '' : stop.name));
                     }
                 )
             ).removeAttr('disabled');
@@ -480,7 +487,7 @@ $(document).ready(
             function () {
                 const input = $route.val().toUpperCase();
                 $route.val(input);
-                if (routes[input] === undefined) {
+                if (!routes.hasOwnProperty(input)) {
                     alert('Invalid route');
                     return false;
                 }
