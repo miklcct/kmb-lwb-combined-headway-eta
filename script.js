@@ -9,17 +9,6 @@ const base_url = 'https://rt.data.gov.hk/';
  * 3. routes which passes the same stop in the same direction twice (e.g. 2X Shau Kei Wan， 796X Tseung Kwan O Industrial Estate)
  */
 
-(function () {
-    const old = $.ajax;
-    $.ajax = function (url, options) {
-        const $xhr = old(url, options);
-        if (!(typeof url === 'object')) {
-            $xhr.url = url;
-        }
-        return $xhr;
-    }
-})();
-
 Date.prototype.hhmmss = function () {
     function pad(number) {
         if (number < 10) {
@@ -32,14 +21,26 @@ Date.prototype.hhmmss = function () {
 };
 
 (function () {
-    let alerted = false;
     $(document).ajaxError(
         function (/** Event */ event, /** XMLHttpRequest */ jqXHR, /** Object */ ajaxSettings, /** String */ thrownError) {
-            if (!alerted) {
-                alerted = true;
-                alert(('AJAX call to ' + jqXHR.url + ' failed: ' + thrownError).trim());
+            if (ajaxSettings.fail_count === undefined) {
+                ajaxSettings.fail_count = 0;
             }
-            window.location.reload();
+            ++ajaxSettings.fail_count;
+            if (ajaxSettings.fail_count === 3) {
+                const $failure = $('#failure');
+                $failure.append($('<span/>').text(('AJAX call to ' + ajaxSettings.url + ' failed: ' + thrownError).trim()))
+                    .append($('<br/>'));
+                $failure.css('display', 'block');
+                debugger;
+            } else {
+                setTimeout(
+                    function () {
+                        $.ajax(ajaxSettings);
+                    }
+                    , 1000
+                );
+            }
         }
     );
 })();
@@ -174,7 +175,7 @@ get_stop.remaining = 0;
 
 function get_route_stop(/** string */ route_id) {
     if (!route_stop.hasOwnProperty(route_id)) {
-        route_stop[route_id] = [];
+        route_stop[route_id] = {};
         get_route_stop.remaining += 2;
         [false, true].forEach(
             function (/** Boolean */ direction) {
@@ -200,7 +201,8 @@ function get_route_stop(/** string */ route_id) {
                                 stop_route[json.stop].sort(RouteStop.compare);
                             }
                         );
-
+                        // condense the array
+                        route_stop[route_id][+direction] = Object.values(route_stop[route_id][+direction]);
 
                         --get_route_stop.remaining;
                     }
@@ -320,7 +322,7 @@ get_all_etas.batch = 0;
 
 (function () {
     let load_from_cache = false;
-    if (typeof Storage !== 'undefined') {
+    if (typeof localStorage !== 'undefined') {
         try {
             const storage_updated = localStorage.getItem('updated');
             if (storage_updated !== null) {
@@ -367,7 +369,7 @@ function enable_when_ready() {
                 return compare_route_id(a.id, b.id);
             }
         );
-        if (typeof Storage !== 'undefined') {
+        if (typeof localStorage !== 'undefined') {
             if (localStorage.getItem('updated') === null) {
                 localStorage.setItem('routes', JSON.stringify(routes));
                 localStorage.setItem('stops', JSON.stringify(stops));
@@ -386,7 +388,7 @@ function enable_when_ready() {
         ).removeAttr('disabled');
         $route.removeAttr('disabled');
         $route_submit.removeAttr('disabled');
-        if (query_string !== undefined) {
+        if (query_string !== null) {
             const first_selection = query_string.get('selections');
             const segments = first_selection.split('-');
             $route.val(segments[1]);
@@ -398,7 +400,6 @@ function enable_when_ready() {
             $stop_list.change();
             $common_route_list.val(query_string.getAll('selections'));
             $common_route_list.change();
-            query_string = undefined;
         }
         $('#loading').remove();
         window.clearInterval(enable_when_ready.handler);
@@ -426,7 +427,7 @@ $(document).ready(
                 get_all_etas(query_string.get('stop'), query_string.getAll('selections'));
                 return query_string;
             } else {
-                return undefined;
+                return null;
             }
         })(new URLSearchParams(window.location.search));
 
@@ -449,11 +450,9 @@ $(document).ready(
             $stop_list.empty().append($('<option/>')).append(
                 route_stop[route.id][+direction].map(
                     function (/** RouteStop */ route_stop) {
-                        if (route_stop !== null) {
-                            const stop_id = route_stop.stop_id;
-                            const stop = stops[stop_id];
-                            return $('<option></option>').attr('value', stop_id).text(stop_id + ' ' + (stop.name === undefined ? '' : stop.name));
-                        }
+                        const stop_id = route_stop.stop_id;
+                        const stop = stops[stop_id];
+                        return $('<option></option>').attr('value', stop_id).text(stop_id + ' ' + (stop.name === undefined ? '' : stop.name));
                     }
                 )
             ).removeAttr('disabled');
@@ -464,6 +463,8 @@ $(document).ready(
                 $switch_direction.removeAttr('disabled');
             }
         }
+
+        $('#failure').css('display', 'none');
 
         $route.attr('disabled', 'disabled');
         $eta_loading.css('display', 'none');
