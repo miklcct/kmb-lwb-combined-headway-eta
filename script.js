@@ -22,14 +22,10 @@ Date.prototype.hhmmss = function () {
 
 (function () {
     $(document).ajaxError(
-        function (/** Event */ event, /** XMLHttpRequest */ jqXHR, /** Object */ ajaxSettings, /** String */ thrownError) {
-            if (!ajaxSettings.hasOwnProperty('fail_count')) {
-                ajaxSettings.fail_count = 0;
-            }
-            ++ajaxSettings.fail_count;
-            if (ajaxSettings.fail_count === 3) {
+        function (/** Event */ event, /** XMLHttpRequest */ jqXHR, /** Object */ ajaxSettings) {
+            if (jqXHR.readyState === 4) {
                 const $failure = $('#failure');
-                $failure.append($('<span/>').text(('AJAX call to ' + ajaxSettings.url + ' failed: ' + thrownError).trim()))
+                $failure.append($('<span/>').text(('AJAX call to ' + ajaxSettings.url + ' failed: ' + jqXHR.status).trim()))
                     .append($('<br/>'));
                 $failure.css('display', 'block');
                 debugger;
@@ -163,7 +159,7 @@ function get_stop(/** string */ stop_id) {
         ++get_stop.remaining;
         stops[stop_id] = null;
         $.getJSON(
-            base_url + '/v1/transport/citybus-nwfb/stop/' + stop_id
+            base_url + 'v1/transport/citybus-nwfb/stop/' + stop_id
             , function (/** Object */ json) {
                 if (json.data.hasOwnProperty('stop')) {
                     stops[stop_id] = new Stop(json.data.stop, json.data.name_en);
@@ -182,7 +178,7 @@ function get_route_stop(/** string */ route_id) {
         [false, true].forEach(
             function (/** Boolean */ direction) {
                 $.getJSON(
-                    base_url + '/v1/transport/citybus-nwfb/route-stop/' + routes[route_id].company + '/' + routes[route_id].id + '/'
+                    base_url + 'v1/transport/citybus-nwfb/route-stop/' + routes[route_id].company + '/' + routes[route_id].id + '/'
                     + (direction ? 'inbound' : 'outbound')
                     , function (/** Object */ data) {
                         const stop_list = data.data;
@@ -217,7 +213,7 @@ get_route_stop.remaining = 0;
 
 function get_route_list(/** String */ company_id) {
     $.getJSON(
-        base_url + '/v1/transport/citybus-nwfb/route/' + company_id
+        base_url + 'v1/transport/citybus-nwfb/route/' + company_id
         , {}
         , function (/** Object */ data) {
             data.data.forEach(
@@ -236,7 +232,7 @@ get_route_list.remaining = 2;
 function get_eta(/** Number */ batch, /** String */ company_id, /** String */ stop_id, /** String */ route_id) {
     ++get_eta.remaining;
     $.getJSON(
-        base_url + '/v1/transport/citybus-nwfb/eta/' + company_id + '/' + stop_id + '/' + route_id
+        base_url + 'v1/transport/citybus-nwfb/eta/' + company_id + '/' + stop_id + '/' + route_id
         , function (/** Object */ data) {
             if (batch === get_all_etas.batch) {
                 data.data.forEach(
