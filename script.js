@@ -260,7 +260,7 @@ function get_eta(/** Number */ batch, /** String */ company_id, /** String */ st
                                     return eta.route_id === segments[1]
                                         && eta.direction === (segments[2] === 'I');
                                 }
-                                return get_all_etas.selections.filter(match).length > 0;
+                                return eta.time !== null && get_all_etas.selections.filter(match).length > 0;
                             }
                         ).slice(0, 3).map(
                             function (/** Eta */ eta) {
