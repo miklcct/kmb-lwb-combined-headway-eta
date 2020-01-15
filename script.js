@@ -323,6 +323,18 @@ function is_storage_available() {
     return window.hasOwnProperty('localStorage');
 }
 
+function get_syscode() {
+    const timestamp = Math.round(Date.now() / 1000);
+    const timestamp_string = String(timestamp);
+    const random = Math.floor(Math.random() * 1000);
+    let random_string = String(random);
+    while (random_string.length < 4) {
+        random_string = '0' + random_string;
+    }
+    const source_string = timestamp_string.substr(0, timestamp_string.length - 6) + random_string;
+    return source_string + md5(source_string + 'firstbusmwymwy');
+}
+
 (function () {
     let load_from_cache = false;
     if (is_storage_available()) {
