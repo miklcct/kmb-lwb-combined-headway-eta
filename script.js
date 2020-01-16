@@ -259,9 +259,6 @@ function compare_route_number(/** String */ a, /** String */ b) {
 }
 
 
-let $stop_count;
-let $route_count;
-let $company_count;
 let $common_route_list;
 let $route;
 let $route_submit;
@@ -451,9 +448,6 @@ function update_route_list(routes) {
 
 $(document).ready(
     function () {
-        $stop_count = $('#stop_count');
-        $route_count = $('#route_count');
-        $company_count = $('#company_count');
         $common_route_list = $('#common_route_list');
         $route = $('#route');
         $route_submit = $('#route_submit');
