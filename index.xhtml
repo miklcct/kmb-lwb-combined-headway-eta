@@ -29,19 +29,19 @@
         <p id="failure"/>
         <form>
             <p>
-                <label>Enter the route number: <input id="route" name="route" maxlength="4" disabled="disabled"/></label><br/>
-                <label>or choose a route in the list:<br/><select id="route_list" disabled="disabled"/></label><br/>
-                <input type="submit" id="route_submit" disabled="disabled"/>
+                <label>Enter the route number: <input id="route" name="route" maxlength="4"/></label><br/>
+                <label>or choose a route in the list:<br/><select id="route_list"/></label><br/>
+                <input type="submit" id="route_submit"/>
                 <button id="switch_direction" type="button" disabled="disabled">Switch direction</button><br/>
-                <label>Choose a route variant: <select id="variant_list" name="variant" disabled="disabled"/></label><br/>
+                <label>Choose a route variant: <select id="variant_list" name="variant"/></label><br/>
             </p>
         </form>
-        <form>
+        <form id="form">
             <p>
-                <label>Choose a stop in the list: <select id="stop_list" name="stop" disabled="disabled"/></label>
+                <label>Choose a stop in the list: <select id="stop_list" name="stop"/></label>
             </p>
             <p>
-                <label>Route serving the stop selected: <select multiple="multiple" id="common_route_list" name="selections" disabled="disabled"/></label>
+                <label>Route serving the stop selected: <select multiple="multiple" id="common_route_list" name="selections"/></label>
             </p>
             <button type="submit" id="selection_submit">Refresh with permalink</button>
         </form>

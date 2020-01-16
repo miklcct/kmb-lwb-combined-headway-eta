@@ -52,21 +52,14 @@ $(document).ready(
         const $eta_last_updated = $('#eta_last_updated');
         const $variant_list = $('#variant_list');
 
-        const query_string = (function (query_string) {
-            if (query_string.has('stop') && query_string.has('selections')) {
-                get_all_etas(query_string.get('stop'), query_string.getAll('selections'));
-                return query_string;
-            } else {
-                return null;
-            }
-        })(new URLSearchParams(window.location.search));
+        let query_stop_id = null;
+        let query_selections = null;
 
         $('#failure').css('display', 'none');
 
-        $route.attr('disabled', 'disabled');
         $eta_loading.css('display', 'none');
 
-        $route_list.attr('disabled', 'disabled').change(
+        $route_list.change(
             function () {
                 const route = $('#route_list option:selected').first().data('model');
                 if (route !== undefined) {
@@ -76,10 +69,10 @@ $(document).ready(
                     } else {
                         $switch_direction.attr('disabled', 'disabled');
                     }
-                    $variant_list.empty().append($('<option/>')).attr('disabled', 'disabled');
                     Variant.get(
                         route
                         , function (/** Object */ variants) {
+                            $variant_list.empty().append($('<option/>'));
                             Object.values(variants)
                                 .sort(
                                     function (/** Variant */ a, /** Variant */ b) {
@@ -88,21 +81,30 @@ $(document).ready(
                                 )
                                 .forEach(
                                     function (/** Variant */ variant) {
-                                        $variant_list.append(
-                                            $('<option/>').attr('value', variant.id)
-                                                .text(variant.sequence + ' ' + variant.description)
-                                                .data('model', variant)
+                                        const $option = $('<option/>').attr('value', variant.id)
+                                            .text(variant.sequence + ' ' + variant.description)
+                                            .data('model', variant);
+                                        $common_route_list.children().each(
+                                            function () {
+                                                const model = $(this).data('model');
+                                                if (model !== undefined && model.variant.id === variant.id) {
+                                                    $option.attr('selected', 'selected');
+                                                }
+                                            }
                                         );
+                                    $variant_list.append($option);
                                     }
                                 );
-                            $variant_list.removeAttr('disabled');
+                            $variant_list.change();
                         }
                     );
+                } else {
+                    $variant_list.change();
                 }
             }
         );
 
-        $route_submit.attr('disabled', 'disabled').click(
+        $route_submit.click(
             function () {
                 const input = $route.val().toUpperCase();
                 $route.val(input);
@@ -124,7 +126,7 @@ $(document).ready(
             }
         );
 
-        $switch_direction.attr('disabled', 'disabled').click(
+        $switch_direction.click(
             function () {
                 const selected_route = $('#route_list option:selected').first().data('model');
                 if (selected_route !== undefined) {
@@ -141,14 +143,16 @@ $(document).ready(
             }
         );
 
-        $variant_list.attr('disabled', 'disabled').change(
+        $variant_list.change(
             function () {
                 const variant = $('#variant_list option:selected').first().data('model');
+
                 if (variant !== undefined) {
-                    $stop_list.empty().append($('<option/>')).attr('disabled', 'disabled');
                     Stop.get(
                         variant
                         , function (/** Array */ stops) {
+                            const selected_stop_id = $stop_list.val();
+                            $stop_list.empty().append($('<option/>'));
                             $stop_list.append(
                                 stops.map(
                                     function (/** Stop */ stop, /** int */ index) {
@@ -158,59 +162,112 @@ $(document).ready(
                                             .data('model', stop);
                                     }
                                 )
-                            ).removeAttr('disabled');
+                            );
+                            $stop_list.val(query_stop_id ? query_stop_id : selected_stop_id);
+                            $stop_list.change();
                         }
-                    )
+                    );
+                } else {
+                    $stop_list.change();
                 }
             }
         );
 
-        $stop_list.attr('disabled', 'disabled').change(
+        const update_route_list = function (/** Object */ routes) {
+            let routes_array = Object.values(routes);
+            $route_list.empty().append($('<option/>')).append(
+                routes_array.sort(Route.compare).map(
+                    function (/** Route */ route) {
+                        return $('<option></option>').attr('value', route.id).text(route.getDescription())
+                            .data('model', route);
+                    }
+                )
+            );
+            if (query_selections !== null) {
+                $route_list.val(query_selections[0]).change();
+            }
+        };
+
+        const update_common_route_list = function (/** Object */ result) {
+            const old_selections = $('#common_route_list option:selected').map(
+                function () {
+                    return $(this).attr('value');
+                }
+            ).get();
+            $common_route_list.empty();
+            Object.values(result).sort(
+                function (/** StopRoute */ a, /** StopRoute */ b) {
+                    return Route.compare(a.variant.route, b.variant.route);
+                }
+            )
+                .forEach(
+                    function (/** StopRoute */ stopRoute) {
+                        const $element = $('<option></option>').attr('value', stopRoute.variant.route.id)
+                            .text(stopRoute.variant.route.getDescription())
+                            .data('model', stopRoute);
+                        if (
+                            (query_selections !== null && query_selections.includes(stopRoute.variant.route.id))
+                            || stopRoute.variant.route.id === $route_list.val()
+                            || old_selections.includes(stopRoute.variant.route.id)
+                        ) {
+                            $element.attr('selected', 'selected');
+                            const $selected_stop = $('#stop_list option:selected').first();
+                            const selected_sequence = $selected_stop.data('sequence');
+                            const selected_stop = $selected_stop.data('stop');
+                            if (
+                                selected_stop !== undefined && stopRoute.stop.id === selected_stop.id
+                                && selected_sequence !== undefined && stopRoute.sequence !== selected_sequence
+                            ) {
+                                // this is needed to handle a route passing the same stop twice, e.g. 2X or 796X
+                                $stop_list.children().each(
+                                    function () {
+                                        const $this = $(this);
+                                        const sequence = $this.data('sequence');
+                                        if (stopRoute.stop.id === stop.id && sequence === stopRoute.sequence) {
+                                            $this.attr('selected', 'selected');
+                                            return false;
+                                        }
+                                    }
+                                );
+                            }
+                        }
+                        $common_route_list.append($element);
+                    }
+                );
+            $common_route_list.change();
+            if (query_selections !== null) {
+                Route.get(update_route_list);
+            }
+        };
+
+        function save_state() {
+            const query_string = '?' + $('#form').serialize();
+            if (window.location.search !== query_string) {
+                window.history.pushState(query_string, undefined, query_string);
+            }
+        }
+
+        $stop_list.change(
             function () {
                 const stop = $('#stop_list option:selected').first().data('model');
                 if (stop !== undefined) {
-                    $common_route_list.empty().attr('disabled', 'disabled');
                     StopRoute.get(
                         stop
-                        , function (/** Object */ result) {
-                            Object.values(result).sort(
-                                function (/** StopRoute */ a, /** StopRoute */ b) {
-                                    return Route.compare(a.variant.route, b.variant.route);
-                                }
-                            )
-                                .forEach(
-                                    function (/** StopRoute */ stopRoute) {
-                                        const $element = $('<option></option>').attr('value', stopRoute.variant.route.id)
-                                            .text(stopRoute.variant.route.getDescription())
-                                            .data('model', stopRoute);
-                                        if (stopRoute.variant.route.id === $route_list.val()) {
-                                            $element.attr('selected', 'selected');
-                                            const selected_sequence = $('#stop_list option:selected').first().data('sequence');
-                                            if (selected_sequence !== undefined && stopRoute.sequence !== selected_sequence) {
-                                                // this is needed to handle a route passing the same stop twice, e.g. 2X or 796X
-                                                $stop_list.children().each(
-                                                    function () {
-                                                        const $this = $(this);
-                                                        const sequence = $this.data('sequence');
-                                                        if (sequence === stopRoute.sequence) {
-                                                            $this.attr('selected', 'selected');
-                                                            return false;
-                                                        }
-                                                    }
-                                                );
-                                            }
-                                        }
-                                        $common_route_list.append($element);
-                                    }
-                                );
-                            $common_route_list.removeAttr('disabled').change();
+                        , function (result) {
+                            query_stop_id = null;
+                            query_selections = null;
+                            update_common_route_list(result);
                         }
-                    )
+                    );
+                } else {
+                    query_stop_id = null;
+                    query_selections = null;
                 }
             }
         );
 
         const update_eta = function () {
+            save_state();
             clearTimeout(update_eta.timer);
             $eta_loading.css('display', 'block');
             let count = 0;
@@ -254,26 +311,27 @@ $(document).ready(
             )
         };
         update_eta.batch = 0;
-        $common_route_list.attr('disabled', 'disabled').change(update_eta);
 
+        $common_route_list.change(update_eta);
 
-        $route_list.empty().attr('disabled', 'disabled');
-        $route.val('').attr('disabled', 'disabled');
-        $route_submit.attr('disabled', 'disabled');
-        Route.get(
-            function (/** Object */ routes) {
-                let routes_array = Object.values(routes);
-                $route_list.empty().append($('<option/>')).append(
-                    routes_array.sort(Route.compare).map(
-                        function (/** Route */ route) {
-                            return $('<option></option>').attr('value', route.id).text(route.getDescription())
-                                .data('model', route);
-                        }
-                    )
-                ).removeAttr('disabled');
-                $route.removeAttr('disabled');
-                $route_submit.removeAttr('disabled');
+        function init() {
+            $common_route_list.empty();
+            (function (query_string) {
+                if (query_string.has('stop') && query_string.has('selections')) {
+                    query_stop_id = query_string.get('stop');
+                    query_selections = query_string.getAll('selections');
+                }
+            })(new URLSearchParams(window.location.search));
+
+            if (query_stop_id !== null) {
+                StopRoute.get(new Stop(Number(query_stop_id), null), update_common_route_list);
+            } else {
+                Route.get(update_route_list);
             }
-        );
+        }
+
+        window.addEventListener('popstate', init);
+
+        init();
     }
 );

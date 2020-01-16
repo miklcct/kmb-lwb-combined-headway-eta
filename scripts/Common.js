@@ -3,8 +3,11 @@
 const Common = {
     PROXY_URL : 'https://cors-anywhere.herokuapp.com/',
     BASE_URL : 'https://mobile.nwstbus.com.hk/api6/',
-    getCallbackForMobileApi : function (/** Function */ handler) {
+    getCallbackForMobileApi : function (/** Function */ handler, preprocess) {
         return function (/** string */ data) {
+            if (preprocess !== undefined) {
+                data = preprocess(data);
+            }
             handler(
                 data.split('<br>').filter(
                     function (/** String */ line) {
@@ -29,7 +32,7 @@ const Common = {
         const source_string = timestamp_string.substr(0, timestamp_string.length - 6) + random_string;
         return source_string + md5(source_string + 'firstbusmwymwy');
     },
-    callApi : function (/** String */ file, /** Object */ query, /** Function */ callback) {
+    callApi : function (/** String */ file, /** Object */ query, /** Function */ callback, /** Function */ preprocess) {
         $.get(
             Common.PROXY_URL + Common.BASE_URL + file
             , Object.assign(
@@ -39,7 +42,7 @@ const Common = {
                 }
                 , query
             )
-            , Common.getCallbackForMobileApi(callback)
+            , Common.getCallbackForMobileApi(callback, preprocess)
         );
     }
 };
