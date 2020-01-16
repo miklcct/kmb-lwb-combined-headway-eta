@@ -233,15 +233,37 @@ $(document).ready(
 
         $route_list.attr('disabled', 'disabled').change(
             function () {
-                const route = Route.all[$('#route_list option:selected').first().val()];
-                $route.val(route.number);
-                $direction.val(route.direction);
-                if (route.number_of_ways === 2) {
-                    $switch_direction.removeAttr('disabled');
-                } else {
-                    $switch_direction.attr('disabled', 'disabled');
+                const route = $('#route_list option:selected').first().data('model');
+                if (route !== undefined) {
+                    $route.val(route.number);
+                    if (route.number_of_ways === 2) {
+                        $switch_direction.removeAttr('disabled');
+                    } else {
+                        $switch_direction.attr('disabled', 'disabled');
+                    }
+                    $variant_list.empty().attr('disabled', 'disabled');
+                    Variant.get(
+                        route
+                        , function (/** Object */ variants) {
+                            Object.values(variants)
+                                .sort(
+                                    function (/** Variant */ a, /** Variant */ b) {
+                                        return a.sequence - b.sequence;
+                                    }
+                                )
+                                .forEach(
+                                    function (/** Variant */ variant) {
+                                        $variant_list.append(
+                                            $('<option/>').attr('value', variant.id)
+                                                .text(variant.sequence + ' ' + variant.description)
+                                                .data('model', variant)
+                                        );
+                                    }
+                                );
+                            $variant_list.removeAttr('disabled');
+                        }
+                    );
                 }
-                Variant.get(route);
             }
         );
 
@@ -296,6 +318,25 @@ $(document).ready(
                 )
             }
         );
-        Route.get();
+
+
+        $route_list.empty().attr('disabled', 'disabled');
+        $route.val('').attr('disabled', 'disabled');
+        $route_submit.attr('disabled', 'disabled');
+        Route.get(
+            function (/** Object */ routes) {
+                let routes_array = Object.values(routes);
+                $route_list.empty().append($('<option/>')).append(
+                    routes_array.sort(Route.compare).map(
+                        function (/** Route */ route) {
+                            return $('<option></option>').attr('value', route.id).text(route.getDescription())
+                                .data('model', route);
+                        }
+                    )
+                ).removeAttr('disabled');
+                $route.removeAttr('disabled');
+                $route_submit.removeAttr('disabled');
+            }
+        );
     }
 );

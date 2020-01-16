@@ -31,7 +31,7 @@ const Common = {
     },
     callApi : function (/** String */ file, /** Object */ query, /** Function */ callback) {
         $.get(
-            Common.PROXY_URL + Common.BASE_URL + 'getnextbus2.php'
+            Common.PROXY_URL + Common.BASE_URL + file
             , Object.assign(
                 {
                     syscode : Common.getSyscode(),

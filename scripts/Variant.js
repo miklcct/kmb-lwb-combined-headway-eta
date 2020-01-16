@@ -10,9 +10,8 @@ class Variant {
     }
 }
 Variant.all = {};
-Variant.get = function (/** Route */ route) {
-    Variant.all = {};
-    $variant_list.empty().attr('disabled', 'disabled');
+Variant.get = function (/** Route */ route, /** Function */ callback) {
+    const variants = {};
     Common.callApi(
         'getvariantlist.php'
         , {id : route.id}
@@ -21,23 +20,10 @@ Variant.get = function (/** Route */ route) {
             data.forEach(
                 function (/** Array */ segments) {
                     const variant = new Variant(route, segments[2], Number(segments[0]), segments[3], segments[4]);
-                    Variant.all[variant.id] = variant;
+                    variants[variant.id] = variant;
                 }
             );
-            Object.values(Variant.all)
-                .sort(
-                    function (/** Variant */ a, /** Variant */ b) {
-                        return a.sequence - b.sequence;
-                    }
-                )
-                .forEach(
-                    function (/** Variant */ variant) {
-                        $variant_list.append(
-                            $('<option/>').attr('value', variant.id).text(variant.sequence + ' ' + variant.description)
-                        );
-                    }
-                );
-            $variant_list.removeAttr('disabled');
+            callback(variants);
         }
     )
 };
