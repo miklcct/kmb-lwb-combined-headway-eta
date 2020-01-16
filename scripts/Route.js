@@ -25,28 +25,26 @@ Route.get = function () {
     $route_list.empty().attr('disabled', 'disabled');
     $route.val('').attr('disabled', 'disabled');
     $route_submit.attr('disabled', 'disabled');
-    $.get(
-        Common.PROXY_URL + Common.BASE_URL + 'getroutelist2.php'
-        , {syscode : get_syscode(), l : 1}
-        , Common.getCallbackForMobileApi(
-            function (/** Array */ data) {
-                data.forEach(
-                    function (/** Array */ segments) {
-                        const route = new Route(segments[0], segments[7], segments[1], segments[4], segments[5], segments[9], Number(segments[3]));
-                        Route.all[route.id] = route;
+    Common.callApi(
+        'getroutelist2.php'
+        , {}
+        , function (/** Array */ data) {
+            data.forEach(
+                function (/** Array */ segments) {
+                    const route = new Route(segments[0], segments[7], segments[1], segments[4], segments[5], segments[9], Number(segments[3]));
+                    Route.all[route.id] = route;
+                }
+            );
+            let routes_array = Object.values(Route.all);
+            $route_list.empty().append($('<option/>')).append(
+                routes_array.sort(Route.compare).map(
+                    function (/** Route */ route) {
+                        return $('<option></option>').attr('value', route.id).text(route.getDescription());
                     }
-                );
-                let routes_array = Object.values(Route.all);
-                $route_list.empty().append($('<option/>')).append(
-                    routes_array.sort(Route.compare).map(
-                        function (/** Route */ route) {
-                            return $('<option></option>').attr('value', route.id).text(route.getDescription());
-                        }
-                    )
-                ).removeAttr('disabled');
-                $route.removeAttr('disabled');
-                $route_submit.removeAttr('disabled');
-            }
-        )
+                )
+            ).removeAttr('disabled');
+            $route.removeAttr('disabled');
+            $route_submit.removeAttr('disabled');
+        }
     );
 };
