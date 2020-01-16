@@ -42,13 +42,28 @@ Date.prototype.hhmmss = function () {
 })();
 
 class Route {
-    constructor(/** String */ company, /** String */ id, /** String */ route, /** String */ origin, /** String */ destination, /** String */ direction) {
+    constructor(/** String */ company, /** String */ id, /** String */ number, /** String */ origin, /** String */ destination, /** String */ direction, /** int */ number_of_ways) {
         this.company = company;
         this.id = id;
-        this.route = route;
+        this.number = number;
         this.origin = origin;
         this.destination = destination;
-        this.direction = direction
+        this.direction = direction;
+        this.number_of_ways = number_of_ways;
+    }
+}
+
+Route.compare = function (/** Route */ a, /** Route */ b) {
+    return a.number === b.number
+        ? a.direction > b.direction ? -1 : a.direction < b.direction ? 1 : 0
+        : compare_route_number(a.number, b.number)
+};
+
+class Variant {
+    constructor(/** String */ id, /** int */ index, /** String */ description) {
+        this.id = id;
+        this.index = index;
+        this.description = description;
     }
 }
 
@@ -70,7 +85,7 @@ class RouteStop {
 RouteStop.compare = function (/** RouteStop */ a, /** RouteStop */ b) {
     return a.route_id === b.route_id
         ? a.direction - b.direction
-        : compare_route_id(a.route_id, b.route_id);
+        : compare_route_number(a.route_id, b.route_id);
 };
 
 class Eta {
@@ -87,7 +102,7 @@ Eta.compare = function (/** Eta */ a, /** Eta */ b) {
     return (a.time === null ? Infinity : a.time.getTime()) - (b.time === null ? Infinity : b.time.getTime());
 };
 
-function compare_route_id(/** String */ a, /** String */ b) {
+function compare_route_number(/** String */ a, /** String */ b) {
     function explode_segments(/** String */ route_id) {
         let segments = [];
         [...route_id].forEach(
@@ -148,6 +163,7 @@ let $eta_body;
 let $direction;
 let $eta_loading;
 let $eta_last_updated;
+let $variant_list;
 let query_string;
 
 let routes = {};
@@ -213,27 +229,75 @@ function get_route_stop(/** string */ route_id) {
 }
 get_route_stop.remaining = 0;
 
-function get_route_list(/** String */ company_id) {
+function handle_mobile_api_result(handler) {
+    return function (/** string */ data) {
+        handler(
+            data.split('<br>').filter(
+                function (/** String */ line) {
+                    return line !== '';
+                }
+            ).map(
+                function (/** String */ line) {
+                    return line.split('||');
+                }
+            )
+        );
+    }
+}
+
+function get_route_list() {
     $.get(
         'https://cors-anywhere.herokuapp.com/https://mobile.nwstbus.com.hk/api6/getroutelist2.php'
         , {syscode : get_syscode(), l : 1}
-        , function (/** string */ data) {
-            const lines = data.split('<br>');
-            lines.forEach(
-                function (/** String */ line) {
-                    if (line !== '') {
-                        const segments = line.split('||');
-                        console.log(segments);
-                        const route = new Route(segments[0], segments[7], segments[1], segments[4], segments[5], segments[9]);
+        , handle_mobile_api_result(
+            function (/** Array */ data) {
+                data.forEach(
+                    function (/** Array */ segments) {
+                        const route = new Route(segments[0], segments[7], segments[1], segments[4], segments[5], segments[9], Number(segments[3]));
                         routes[route.id] = route;
                     }
-                }
-            );
-            --get_route_list.remaining;
-        }
-    )
+                );
+                update_route_list(routes);
+            }
+        )
+    );
 }
-get_route_list.remaining = 1;
+get_route_list.remaining = 0;
+
+function get_route_variants(/** Route */ route) {
+    $variant_list.empty().attr('disabled', 'disabled');
+    $.get(
+        'https://cors-anywhere.herokuapp.com/https://mobile.nwstbus.com.hk/api6/getvariantlist.php'
+        , {syscode : get_syscode(), l : 1, id : route.id}
+        , handle_mobile_api_result(
+            function (/** Array */ data) {
+                get_route_variants.variants = [];
+                $variant_list.empty().append($('<option/>'));
+                data.forEach(
+                    function (/** Array */ segments) {
+                        console.log(segments);
+                        get_route_variants.variants.push(new Variant(segments[2], Number(segments[0]), segments[3]));
+                    }
+                );
+                get_route_variants.variants.sort(
+                    function (/** Variant */ a, /** Variant */ b) {
+                        return a.index - b.index;
+                    }
+                );
+                get_route_variants.variants.forEach(
+                    function (/** Variant */ variant) {
+                        $variant_list.append(
+                            $('<option/>').attr('value', variant.id).text(variant.index + ' ' + variant.description)
+                        );
+                    }
+                );
+                $variant_list.removeAttr('disabled');            }
+        )
+    )
+
+}
+
+get_route_variants.variants = [];
 
 function get_eta(/** Number */ batch, /** String */ company_id, /** String */ stop_id, /** String */ route_id) {
     ++get_eta.remaining;
@@ -380,17 +444,25 @@ function get_syscode() {
     get_route_list();
 })();
 
+function update_route_list(routes) {
+    let routes_array = Object.values(routes);
+    $route_list.empty().append($('<option/>')).append(
+        routes_array.sort(Route.compare).map(
+            function (/** Route */ route) {
+                return $('<option></option>').attr('value', route.id)
+                    .text(route.number + ' ' + route.origin + (route.number_of_ways === 0 ? ' ↺ ' : ' → ') + route.destination);
+            }
+        )
+    ).removeAttr('disabled');
+    $route.removeAttr('disabled');
+    $route_submit.removeAttr('disabled');
+}
+
 function enable_when_ready() {
     $stop_count.text(get_stop.remaining);
     $route_count.text(get_route_stop.remaining);
     $company_count.text(get_route_list.remaining);
     if (get_route_list.remaining === 0 && get_stop.remaining === 0 && get_route_stop.remaining === 0) {
-        let routes_array = Object.values(routes);
-        routes_array.sort(
-            function (/** Route */ a, /** Route */ b) {
-                return compare_route_id(a.id, b.id);
-            }
-        );
         if (is_storage_available()) {
             if (localStorage.getItem('updated') === null) {
                 localStorage.setItem('routes', JSON.stringify(routes));
@@ -400,16 +472,7 @@ function enable_when_ready() {
                 localStorage.setItem('updated', (new Date()).getTime().toString());
             }
         }
-        $route_list.empty().append($('<option/>')).append(
-            routes_array.map(
-                function (/** Route */ route) {
-                    return $('<option></option>').attr('value', route.id)
-                        .text(route.route + ' ' + route.origin + ' → ' + route.destination);
-                }
-            )
-        ).removeAttr('disabled');
-        $route.removeAttr('disabled');
-        $route_submit.removeAttr('disabled');
+        update_route_list(routes);
         if (query_string !== null) {
             const first_selection = query_string.get('selections');
             const segments = first_selection.split('-');
@@ -443,6 +506,7 @@ $(document).ready(
         $eta_body = $('#eta tbody');
         $eta_loading = $('#eta_loading');
         $eta_last_updated = $('#eta_last_updated');
+        $variant_list = $('#variant_list');
 
         query_string = (function (query_string) {
             if (query_string.has('stop') && query_string.has('selections')) {
@@ -466,9 +530,8 @@ $(document).ready(
             );
         }
 
-        function load_route(/** Route */ route, /** Boolean */ direction) {
+        function load_route(/** Route */ route) {
             $common_route_list.empty();
-            $('#direction_text').text((direction ? route.destination : route.origin) + ' → ' + (direction ? route.origin : route.destination));
             $stop_list.empty().append($('<option/>')).append(
                 route_stop[route.id][+direction].map(
                     function (/** RouteStop */ route_stop) {
@@ -494,9 +557,14 @@ $(document).ready(
         $route_list.attr('disabled', 'disabled').change(
             function () {
                 const route = routes[$('#route_list option:selected').first().val()];
-                $route.val(route.route);
+                $route.val(route.number);
                 $direction.val(route.direction);
-                $route_submit.click();
+                if (route.number_of_ways === 2) {
+                    $switch_direction.removeAttr('disabled');
+                } else {
+                    $switch_direction.attr('disabled', 'disabled');
+                }
+                get_route_variants(route);
             }
         );
 
@@ -505,9 +573,8 @@ $(document).ready(
                 const input = $route.val().toUpperCase();
                 $route.val(input);
                 for (const i in routes) {
-                    if (routes.hasOwnProperty(i) && routes[i].route === input) {
-                        $route_list.val(routes[i].id);
-                        $direction.val(routes[i].direction);
+                    if (routes.hasOwnProperty(i) && routes[i].number === input) {
+                        $route_list.val(routes[i].id).change();
                         return false;
                     }
                 }
@@ -518,8 +585,13 @@ $(document).ready(
 
         $switch_direction.attr('disabled', 'disabled').click(
             function () {
-                $direction.val($direction.val() !== 'I' ? 'I' : 'O');
-                load_route(routes[$route.val()], $direction.val() === 'I');
+                const route = routes[$('#route_list option:selected').first().val()];
+                for (const i in routes) {
+                    if (routes.hasOwnProperty(i) && routes[i].number === route.number && routes[i].direction !== route.direction) {
+                        $route_list.val(routes[i].id).change();
+                        return;
+                    }
+                }
             }
         );
 
