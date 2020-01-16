@@ -1,6 +1,7 @@
 'use strict';
 
 const base_url = 'https://rt.data.gov.hk/';
+const proxy_url = 'https://cors-anywhere.herokuapp.com/';
 
 /*
  * Test cases:
@@ -60,10 +61,11 @@ Route.compare = function (/** Route */ a, /** Route */ b) {
 };
 
 class Variant {
-    constructor(/** String */ id, /** int */ index, /** String */ description) {
+    constructor(/** String */ id, /** int */ index, /** String */ description, /** String */ info) {
         this.id = id;
         this.index = index;
         this.description = description;
+        this.info = info;
     }
 }
 
@@ -189,46 +191,21 @@ function get_stop(/** string */ stop_id) {
 }
 get_stop.remaining = 0;
 
-function get_route_stop(/** string */ route_id) {
-    if (!route_stop.hasOwnProperty(route_id)) {
-        route_stop[route_id] = {};
-        get_route_stop.remaining += 2;
-        [false, true].forEach(
-            function (/** Boolean */ direction) {
-                $.getJSON(
-                    base_url + 'v1/transport/citybus-nwfb/route-stop/' + routes[route_id].company + '/' + routes[route_id].id + '/'
-                    + (direction ? 'inbound' : 'outbound')
-                    , function (/** Object */ data) {
-                        const stop_list = data.data;
-                        route_stop[route_id][+direction] = [];
-                        stop_list.forEach(
-                            function (/** Object */ json) {
-                                const item = new RouteStop(json.stop, json.route, json.dir === 'I');
-
-                                // FIXME: handle circular route
-                                get_stop(json.stop);
-
-                                // I assume seq will not duplicate
-                                route_stop[route_id][+direction][json.seq] = item;
-                                if (!stop_route.hasOwnProperty(json.stop)) {
-                                    stop_route[json.stop] = [];
-                                }
-                                stop_route[json.stop].push(item);
-                                stop_route[json.stop].sort(RouteStop.compare);
-                            }
-                        );
-                        // condense the array
-                        route_stop[route_id][+direction] = Object.values(route_stop[route_id][+direction]);
-
-                        --get_route_stop.remaining;
+function get_stop_list(/** Variant */ variant) {
+    $.get(
+        proxy_url + 'https://mobile.nwstbus.com.hk/api6/ppstoplist.php'
+        , {syscode : get_syscode(), l : 1, info : '0|*|' + variant.info.replace(/\*\*\*/g, '||')}
+        , handle_mobile_api_result(
+            function (/** Array */ data) {
+                data.forEach(
+                    function (/** Array */ segments) {
+                        console.log(segments);
                     }
                 );
             }
-        );
-    }
+        )
+    );
 }
-get_route_stop.remaining = 0;
-
 function handle_mobile_api_result(handler) {
     return function (/** string */ data) {
         handler(
@@ -247,7 +224,7 @@ function handle_mobile_api_result(handler) {
 
 function get_route_list() {
     $.get(
-        'https://cors-anywhere.herokuapp.com/https://mobile.nwstbus.com.hk/api6/getroutelist2.php'
+        proxy_url + 'https://mobile.nwstbus.com.hk/api6/getroutelist2.php'
         , {syscode : get_syscode(), l : 1}
         , handle_mobile_api_result(
             function (/** Array */ data) {
@@ -264,40 +241,42 @@ function get_route_list() {
 }
 get_route_list.remaining = 0;
 
-function get_route_variants(/** Route */ route) {
+function get_variant_list(/** Route */ route) {
     $variant_list.empty().attr('disabled', 'disabled');
     $.get(
-        'https://cors-anywhere.herokuapp.com/https://mobile.nwstbus.com.hk/api6/getvariantlist.php'
+        proxy_url + 'https://mobile.nwstbus.com.hk/api6/getvariantlist.php'
         , {syscode : get_syscode(), l : 1, id : route.id}
         , handle_mobile_api_result(
             function (/** Array */ data) {
-                get_route_variants.variants = [];
+                get_variant_list.variants = {};
                 $variant_list.empty().append($('<option/>'));
                 data.forEach(
                     function (/** Array */ segments) {
-                        console.log(segments);
-                        get_route_variants.variants.push(new Variant(segments[2], Number(segments[0]), segments[3]));
+                        const variant = new Variant(segments[2], Number(segments[0]), segments[3], segments[4]);
+                        get_variant_list.variants[variant.id] = variant;
                     }
                 );
-                get_route_variants.variants.sort(
-                    function (/** Variant */ a, /** Variant */ b) {
-                        return a.index - b.index;
-                    }
-                );
-                get_route_variants.variants.forEach(
-                    function (/** Variant */ variant) {
-                        $variant_list.append(
-                            $('<option/>').attr('value', variant.id).text(variant.index + ' ' + variant.description)
-                        );
-                    }
-                );
-                $variant_list.removeAttr('disabled');            }
+                Object.values(get_variant_list.variants)
+                    .sort(
+                        function (/** Variant */ a, /** Variant */ b) {
+                            return a.index - b.index;
+                        }
+                    )
+                    .forEach(
+                        function (/** Variant */ variant) {
+                            $variant_list.append(
+                                $('<option/>').attr('value', variant.id).text(variant.index + ' ' + variant.description)
+                            );
+                        }
+                    );
+                $variant_list.removeAttr('disabled');
+            }
         )
     )
 
 }
 
-get_route_variants.variants = [];
+get_variant_list.variants = {};
 
 function get_eta(/** Number */ batch, /** String */ company_id, /** String */ stop_id, /** String */ route_id) {
     ++get_eta.remaining;
@@ -458,39 +437,6 @@ function update_route_list(routes) {
     $route_submit.removeAttr('disabled');
 }
 
-function enable_when_ready() {
-    $stop_count.text(get_stop.remaining);
-    $route_count.text(get_route_stop.remaining);
-    $company_count.text(get_route_list.remaining);
-    if (get_route_list.remaining === 0 && get_stop.remaining === 0 && get_route_stop.remaining === 0) {
-        if (is_storage_available()) {
-            if (localStorage.getItem('updated') === null) {
-                localStorage.setItem('routes', JSON.stringify(routes));
-                localStorage.setItem('stops', JSON.stringify(stops));
-                localStorage.setItem('route_stop', JSON.stringify(route_stop));
-                localStorage.setItem('stop_route', JSON.stringify(stop_route));
-                localStorage.setItem('updated', (new Date()).getTime().toString());
-            }
-        }
-        update_route_list(routes);
-        if (query_string !== null) {
-            const first_selection = query_string.get('selections');
-            const segments = first_selection.split('-');
-            $route.val(segments[1]);
-            $route_submit.click();
-            while ($direction.val() !== segments[2]) {
-                $switch_direction.click();
-            }
-            $stop_list.val(query_string.get('stop'));
-            $stop_list.change();
-            $common_route_list.val(query_string.getAll('selections'));
-            $common_route_list.change();
-        }
-        $('#loading').remove();
-        window.clearInterval(enable_when_ready.handler);
-    }
-}
-
 $(document).ready(
     function () {
         $stop_count = $('#stop_count');
@@ -516,8 +462,6 @@ $(document).ready(
                 return null;
             }
         })(new URLSearchParams(window.location.search));
-
-        enable_when_ready.handler = window.setInterval(enable_when_ready, 100);
 
         function get_all_etas_from_ui() {
             get_all_etas(
@@ -564,7 +508,7 @@ $(document).ready(
                 } else {
                     $switch_direction.attr('disabled', 'disabled');
                 }
-                get_route_variants(route);
+                get_variant_list(route);
             }
         );
 
@@ -592,6 +536,12 @@ $(document).ready(
                         return;
                     }
                 }
+            }
+        );
+
+        $variant_list.attr('disabled', 'disabled').change(
+            function () {
+                get_stop_list(get_variant_list.variants[$('#variant_list option:selected').first().val()])
             }
         );
 
