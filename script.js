@@ -42,11 +42,13 @@ Date.prototype.hhmmss = function () {
 })();
 
 class Route {
-    constructor(/** String */ company, /** String */ id, /** String */ origin, /** String */ destination) {
+    constructor(/** String */ company, /** String */ id, /** String */ route, /** String */ origin, /** String */ destination, /** String */ direction) {
         this.company = company;
         this.id = id;
+        this.route = route;
         this.origin = origin;
         this.destination = destination;
+        this.direction = direction
     }
 }
 
@@ -212,22 +214,26 @@ function get_route_stop(/** string */ route_id) {
 get_route_stop.remaining = 0;
 
 function get_route_list(/** String */ company_id) {
-    $.getJSON(
-        base_url + 'v1/transport/citybus-nwfb/route/' + company_id
-        , {}
-        , function (/** Object */ data) {
-            data.data.forEach(
-                function (/** Object */ json) {
-                    let route = new Route(json.co, json.route, json.orig_en, json.dest_en);
-                    routes[json.route] = route;
-                    get_route_stop(route.id);
+    $.get(
+        'https://cors-anywhere.herokuapp.com/https://mobile.nwstbus.com.hk/api6/getroutelist2.php'
+        , {syscode : get_syscode(), l : 1}
+        , function (/** string */ data) {
+            const lines = data.split('<br>');
+            lines.forEach(
+                function (/** String */ line) {
+                    if (line !== '') {
+                        const segments = line.split('||');
+                        console.log(segments);
+                        const route = new Route(segments[0], segments[7], segments[1], segments[4], segments[5], segments[9]);
+                        routes[route.id] = route;
+                    }
                 }
             );
             --get_route_list.remaining;
         }
     )
 }
-get_route_list.remaining = 2;
+get_route_list.remaining = 1;
 
 function get_eta(/** Number */ batch, /** String */ company_id, /** String */ stop_id, /** String */ route_id) {
     ++get_eta.remaining;
@@ -357,6 +363,7 @@ function get_syscode() {
             // do not do anything if local storage is corrupted
         }
     }
+    load_from_cache = false;
     if (load_from_cache) {
         try {
             routes = JSON.parse(localStorage.getItem('routes'));
@@ -370,7 +377,7 @@ function get_syscode() {
         }
     }
     localStorage.clear();
-    ['CTB', 'NWFB'].forEach(get_route_list);
+    get_route_list();
 })();
 
 function enable_when_ready() {
@@ -397,7 +404,7 @@ function enable_when_ready() {
             routes_array.map(
                 function (/** Route */ route) {
                     return $('<option></option>').attr('value', route.id)
-                        .text(route.id + ' ' + route.origin + ' – ' + route.destination);
+                        .text(route.route + ' ' + route.origin + ' → ' + route.destination);
                 }
             )
         ).removeAttr('disabled');
@@ -486,7 +493,9 @@ $(document).ready(
 
         $route_list.attr('disabled', 'disabled').change(
             function () {
-                $route.val($('#route_list option:selected').first().val());
+                const route = routes[$('#route_list option:selected').first().val()];
+                $route.val(route.route);
+                $direction.val(route.direction);
                 $route_submit.click();
             }
         );
@@ -495,13 +504,14 @@ $(document).ready(
             function () {
                 const input = $route.val().toUpperCase();
                 $route.val(input);
-                if (!routes.hasOwnProperty(input)) {
-                    alert('Invalid route');
-                    return false;
+                for (const i in routes) {
+                    if (routes.hasOwnProperty(i) && routes[i].route === input) {
+                        $route_list.val(routes[i].id);
+                        $direction.val(routes[i].direction);
+                        return false;
+                    }
                 }
-                $route_list.val(input);
-                $direction.val('O');
-                load_route(routes[input], false);
+                alert('Invalid route');
                 return false;
             }
         );
