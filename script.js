@@ -197,10 +197,10 @@ $(document).ready(
         function load_route_list() {
             function choose_route() {
                 const original = $route_list.val();
-                const query_selections = Common.getQuerySelections();
-                if (query_selections.length) {
-                    $route_list.val(query_selections[0]);
-                    if ($route_list.val() !== original) {
+                if (!original) {
+                    const query_selections = Common.getQuerySelections();
+                    if (query_selections.length) {
+                        $route_list.val(query_selections[0]);
                         $route_list.change();
                     }
                 }
