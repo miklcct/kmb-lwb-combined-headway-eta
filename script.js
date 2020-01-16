@@ -94,7 +94,8 @@ Route.get = function () {
 
 
 class Variant {
-    constructor(/** String */ id, /** int */ sequence, /** String */ description, /** String */ info) {
+    constructor(/** Route */ route, /** String */ id, /** int */ sequence, /** String */ description, /** String */ info) {
+        this.route = route;
         this.id = id;
         this.sequence = sequence;
         this.description = description;
@@ -113,7 +114,7 @@ Variant.get = function (/** Route */ route) {
                 $variant_list.empty().append($('<option/>'));
                 data.forEach(
                     function (/** Array */ segments) {
-                        const variant = new Variant(segments[2], Number(segments[0]), segments[3], segments[4]);
+                        const variant = new Variant(route, segments[2], Number(segments[0]), segments[3], segments[4]);
                         Variant.all[variant.id] = variant;
                     }
                 );
@@ -134,8 +135,7 @@ Variant.get = function (/** Route */ route) {
             }
         )
     )
-
-}
+};
 
 
 
@@ -164,15 +164,29 @@ Stop.prototype.getRoutes = function () {
                     .map(
                         function (/** Array */ segments) {
                             console.log(segments);
-                            return new Route(segments[0], segments[6], segments[1], segments[9], segments[2], segments[12], Number(segments[4]));
+                            return new StopRoute(
+                                new Variant(
+                                    new Route(segments[0], segments[6], segments[1], segments[9], segments[2], segments[12], Number(segments[4]))
+                                    , segments[14]
+                                )
+                                , segments[13]
+                            )
                         }
                     )
-                    .sort(Route.compare)
+                    .sort(
+                        function (/** StopRoute */ a, /** StopRoute */ b) {
+                            return Route.compare(a.variant.route, b.variant.route);
+                        }
+                    )
                     .forEach(
-                        function (/** Route */ route) {
-                            const $element = $('<option></option>').attr('value', route.id).text(route.getDescription());
-                            if (route.id === $route_list.val()) {
+                        function (/** StopRoute */ stopRoute) {
+                            const $element = $('<option></option>').attr('value', stopRoute.variant.route.id).text(stopRoute.variant.route.getDescription());
+                            if (stopRoute.variant.route.id === $route_list.val()) {
                                 $element.attr('selected', 'selected');
+                                if (stopRoute.sequence !== $stop_list.val()) {
+                                    // this is needed to handle a route passing the same stop twice, e.g. 2X or 796X
+                                    $stop_list.val(stopRoute.sequence);
+                                }
                             }
                             $common_route_list.append($element);
                         }
@@ -183,19 +197,37 @@ Stop.prototype.getRoutes = function () {
     );
 };
 
-class RouteStop {
-    constructor(/** String */ stop_id, /** String */ route_id, /** Boolean */ direction) {
-        this.stop_id = stop_id;
-        this.route_id = route_id;
-        this.direction = direction;
+Stop.get = function (/** Variant */ variant) {
+    Stop.all = [];
+    $stop_list.empty().attr('disabled', 'disabled');
+    $.get(
+        proxy_url + base_url + 'ppstoplist.php'
+        , {syscode : get_syscode(), l : 1, info : '0|*|' + variant.info.replace(/\*\*\*/g, '||')}
+        , handle_mobile_api_result(
+            function (/** Array */ data) {
+                data.forEach(
+                    function (/** Array */ segments) {
+                        stop = new Stop(segments[3], Number(segments[2]), segments[7]);
+                        Stop.all[stop.sequence] = stop;
+                    }
+                );
+                $stop_list.empty().append($('<option/>')).append(
+                    Stop.all.map(
+                        function (/** Stop */ stop) {
+                            return $('<option></option>').attr('value', stop.sequence).text(stop.sequence + ' ' + stop.name);
+                        }
+                    )
+                ).removeAttr('disabled');
+            }
+        )
+    );
+};
+class StopRoute {
+    constructor(/** Variant */ variant, /** int */ sequence) {
+        this.variant = variant;
+        this.sequence = sequence;
     }
 }
-
-RouteStop.compare = function (/** RouteStop */ a, /** RouteStop */ b) {
-    return a.route_id === b.route_id
-        ? a.direction - b.direction
-        : compare_route_number(a.route_id, b.route_id);
-};
 
 class Eta {
     constructor(/** String */ route_id, /** Boolean */ direction, /** Date */ time, /** String */ destination, /** String */ remark) {
@@ -277,48 +309,6 @@ let route_stop = {};
 let stop_route = {};
 let etas = [];
 
-function get_stop(/** string */ stop_id) {
-    if (!stops.hasOwnProperty(stop_id)) {
-        ++get_stop.remaining;
-        stops[stop_id] = null;
-        $.getJSON(
-            base_url + 'v1/transport/citybus-nwfb/stop/' + stop_id
-            , function (/** Object */ json) {
-                if (json.data.hasOwnProperty('stop')) {
-                    stops[stop_id] = new Stop(json.data.stop, json.data.name_en);
-                }
-                --get_stop.remaining;
-            }
-        );
-    }
-}
-get_stop.remaining = 0;
-
-Stop.get = function (/** Variant */ variant) {
-    Stop.all = [];
-    $stop_list.empty().attr('disabled', 'disabled');
-    $.get(
-        proxy_url + base_url + 'ppstoplist.php'
-        , {syscode : get_syscode(), l : 1, info : '0|*|' + variant.info.replace(/\*\*\*/g, '||')}
-        , handle_mobile_api_result(
-            function (/** Array */ data) {
-                data.forEach(
-                    function (/** Array */ segments) {
-                        stop = new Stop(segments[3], Number(segments[2]), segments[7]);
-                        Stop.all[stop.sequence] = stop;
-                    }
-                );
-                $stop_list.empty().append($('<option/>')).append(
-                    Stop.all.map(
-                        function (/** Stop */ stop) {
-                            return $('<option></option>').attr('value', stop.sequence).text(stop.sequence + ' ' + stop.name);
-                        }
-                    )
-                ).removeAttr('disabled');
-            }
-        )
-    );
-};
 function handle_mobile_api_result(handler) {
     return function (/** string */ data) {
         handler(
