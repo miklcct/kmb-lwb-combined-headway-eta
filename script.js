@@ -241,7 +241,7 @@ $(document).ready(
                     } else {
                         $switch_direction.attr('disabled', 'disabled');
                     }
-                    $variant_list.empty().attr('disabled', 'disabled');
+                    $variant_list.empty().append($('<option/>')).attr('disabled', 'disabled');
                     Variant.get(
                         route
                         , function (/** Object */ variants) {
@@ -296,15 +296,58 @@ $(document).ready(
 
         $variant_list.attr('disabled', 'disabled').change(
             function () {
-                Stop.get(Variant.all[$('#variant_list option:selected').first().val()])
+                const variant = $('#variant_list option:selected').first().data('model');
+                if (variant !== undefined) {
+                    $stop_list.empty().append($('<option/>')).attr('disabled', 'disabled');
+                    Stop.get(
+                        variant
+                        , function (/** Array */ stops) {
+                            $stop_list.append(
+                                stops.map(
+                                    function (/** Stop */ stop, /** int */ index) {
+                                        return $('<option></option>').attr('value', index)
+                                            .text(index + ' ' + stop.name)
+                                            .data('model', stop);
+                                    }
+                                )
+                            ).removeAttr('disabled');
+                        }
+                    )
+                }
             }
         );
 
         $stop_list.attr('disabled', 'disabled').change(
             function () {
-                const stop = Stop.all[$('#stop_list option:selected').first().val()];
-                if (stop instanceof Stop) {
-                    StopRoute.get(stop)
+                const stop = $('#stop_list option:selected').first().data('model');
+                if (stop !== undefined) {
+                    $common_route_list.empty().attr('disabled', 'disabled');
+                    StopRoute.get(
+                        stop
+                        , function (/** Object */ result) {
+                            Object.values(result).sort(
+                                function (/** StopRoute */ a, /** StopRoute */ b) {
+                                    return Route.compare(a.variant.route, b.variant.route);
+                                }
+                            )
+                                .forEach(
+                                    function (/** StopRoute */ stopRoute) {
+                                        const $element = $('<option></option>').attr('value', stopRoute.variant.route.id)
+                                            .text(stopRoute.variant.route.getDescription())
+                                            .data('model', stopRoute);
+                                        if (stopRoute.variant.route.id === $route_list.val()) {
+                                            $element.attr('selected', 'selected');
+                                            if (stopRoute.sequence !== $stop_list.val()) {
+                                                // this is needed to handle a route passing the same stop twice, e.g. 2X or 796X
+                                                $stop_list.val(stopRoute.sequence);
+                                            }
+                                        }
+                                        $common_route_list.append($element);
+                                    }
+                                );
+                            $common_route_list.removeAttr('disabled');
+                        }
+                    )
                 }
             }
         );

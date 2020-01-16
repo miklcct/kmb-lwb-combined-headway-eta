@@ -11,12 +11,11 @@ class Variant {
 }
 Variant.all = {};
 Variant.get = function (/** Route */ route, /** Function */ callback) {
-    const variants = {};
     Common.callApi(
         'getvariantlist.php'
         , {id : route.id}
         , function (/** Array */ data) {
-            $variant_list.empty().append($('<option/>'));
+            const variants = {};
             data.forEach(
                 function (/** Array */ segments) {
                     const variant = new Variant(route, segments[2], Number(segments[0]), segments[3], segments[4]);

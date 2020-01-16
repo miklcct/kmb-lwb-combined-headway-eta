@@ -7,27 +7,19 @@ class Stop {
     }
 }
 
-Stop.get = function (/** Variant */ variant) {
-    Stop.all = [];
+Stop.get = function (/** Variant */ variant, /** Function */ callback) {
     $stop_list.empty().attr('disabled', 'disabled');
     Common.callApi(
         'ppstoplist.php'
         , {info : '0|*|' + variant.info.replace(/\*\*\*/g, '||')}
         , function (/** Array */ data) {
+            const stops = [];
             data.forEach(
                 function (/** Array */ segments) {
-                    const stop = new Stop(segments[3], segments[7]);
-                    const stopRoute = new StopRoute(stop, variant, Number(segments[2]));
-                    Stop.all[stopRoute.sequence] = stop;
+                    stops[Number(segments[2])] = new Stop(segments[3], segments[7]);
                 }
             );
-            $stop_list.empty().append($('<option/>')).append(
-                Stop.all.map(
-                    function (/** Stop */ stop, /** int */ index) {
-                        return $('<option></option>').attr('value', index).text(index + ' ' + stop.name);
-                    }
-                )
-            ).removeAttr('disabled');
+            callback(stops);
         }
     );
 };
