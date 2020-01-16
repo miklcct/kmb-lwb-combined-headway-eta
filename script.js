@@ -59,20 +59,90 @@ Route.compare = function (/** Route */ a, /** Route */ b) {
         ? a.direction > b.direction ? -1 : a.direction < b.direction ? 1 : 0
         : compare_route_number(a.number, b.number)
 };
+Route.get = function () {
+    Route.all = {};
+    $route_list.empty().attr('disabled', 'disabled');
+    $route.val('').attr('disabled', 'disabled');
+    $route_submit.attr('disabled', 'disabled');
+    $.get(
+        proxy_url + 'https://mobile.nwstbus.com.hk/api6/getroutelist2.php'
+        , {syscode : get_syscode(), l : 1}
+        , handle_mobile_api_result(
+            function (/** Array */ data) {
+                data.forEach(
+                    function (/** Array */ segments) {
+                        const route = new Route(segments[0], segments[7], segments[1], segments[4], segments[5], segments[9], Number(segments[3]));
+                        Route.all[route.id] = route;
+                    }
+                );
+                let routes_array = Object.values(Route.all);
+                $route_list.empty().append($('<option/>')).append(
+                    routes_array.sort(Route.compare).map(
+                        function (/** Route */ route) {
+                            return $('<option></option>').attr('value', route.id)
+                                .text(route.number + ' ' + route.origin + (route.number_of_ways === 0 ? ' ↺ ' : ' → ') + route.destination);
+                        }
+                    )
+                ).removeAttr('disabled');
+                $route.removeAttr('disabled');
+                $route_submit.removeAttr('disabled');
+            }
+        )
+    );
+};
+
 
 class Variant {
-    constructor(/** String */ id, /** int */ index, /** String */ description, /** String */ info) {
+    constructor(/** String */ id, /** int */ sequence, /** String */ description, /** String */ info) {
         this.id = id;
-        this.index = index;
+        this.sequence = sequence;
         this.description = description;
         this.info = info;
     }
 }
+Variant.all = {};
+Variant.get = function (/** Route */ route) {
+    Variant.all = {};
+    $variant_list.empty().attr('disabled', 'disabled');
+    $.get(
+        proxy_url + 'https://mobile.nwstbus.com.hk/api6/getvariantlist.php'
+        , {syscode : get_syscode(), l : 1, id : route.id}
+        , handle_mobile_api_result(
+            function (/** Array */ data) {
+                $variant_list.empty().append($('<option/>'));
+                data.forEach(
+                    function (/** Array */ segments) {
+                        const variant = new Variant(segments[2], Number(segments[0]), segments[3], segments[4]);
+                        Variant.all[variant.id] = variant;
+                    }
+                );
+                Object.values(Variant.all)
+                    .sort(
+                        function (/** Variant */ a, /** Variant */ b) {
+                            return a.sequence - b.sequence;
+                        }
+                    )
+                    .forEach(
+                        function (/** Variant */ variant) {
+                            $variant_list.append(
+                                $('<option/>').attr('value', variant.id).text(variant.sequence + ' ' + variant.description)
+                            );
+                        }
+                    );
+                $variant_list.removeAttr('disabled');
+            }
+        )
+    )
+
+}
+
+
 
 class Stop {
-    constructor(/** String */ id, /** String */ name) {
+    constructor(/** String */ id, /** int */ sequence, /** String */ name) {
         this.id = id;
         this.name = name;
+        this.sequence = sequence;
     }
 }
 
@@ -168,7 +238,6 @@ let $eta_last_updated;
 let $variant_list;
 let query_string;
 
-let routes = {};
 let stops = {};
 let route_stop = {};
 let stop_route = {};
@@ -191,7 +260,9 @@ function get_stop(/** string */ stop_id) {
 }
 get_stop.remaining = 0;
 
-function get_stop_list(/** Variant */ variant) {
+Stop.get = function (/** Variant */ variant) {
+    Stop.all = [];
+    $stop_list.empty().attr('disabled', 'disabled');
     $.get(
         proxy_url + 'https://mobile.nwstbus.com.hk/api6/ppstoplist.php'
         , {syscode : get_syscode(), l : 1, info : '0|*|' + variant.info.replace(/\*\*\*/g, '||')}
@@ -200,12 +271,21 @@ function get_stop_list(/** Variant */ variant) {
                 data.forEach(
                     function (/** Array */ segments) {
                         console.log(segments);
+                        stop = new Stop(segments[3], Number(segments[2]), segments[7]);
+                        Stop.all[stop.sequence] = stop;
                     }
                 );
+                $stop_list.empty().append($('<option/>')).append(
+                    Stop.all.map(
+                        function (/** Stop */ stop) {
+                            return $('<option></option>').attr('value', stop.sequence).text(stop.sequence + ' ' + stop.name);
+                        }
+                    )
+                ).removeAttr('disabled');
             }
         )
     );
-}
+};
 function handle_mobile_api_result(handler) {
     return function (/** string */ data) {
         handler(
@@ -222,61 +302,7 @@ function handle_mobile_api_result(handler) {
     }
 }
 
-function get_route_list() {
-    $.get(
-        proxy_url + 'https://mobile.nwstbus.com.hk/api6/getroutelist2.php'
-        , {syscode : get_syscode(), l : 1}
-        , handle_mobile_api_result(
-            function (/** Array */ data) {
-                data.forEach(
-                    function (/** Array */ segments) {
-                        const route = new Route(segments[0], segments[7], segments[1], segments[4], segments[5], segments[9], Number(segments[3]));
-                        routes[route.id] = route;
-                    }
-                );
-                update_route_list(routes);
-            }
-        )
-    );
-}
-get_route_list.remaining = 0;
 
-function get_variant_list(/** Route */ route) {
-    $variant_list.empty().attr('disabled', 'disabled');
-    $.get(
-        proxy_url + 'https://mobile.nwstbus.com.hk/api6/getvariantlist.php'
-        , {syscode : get_syscode(), l : 1, id : route.id}
-        , handle_mobile_api_result(
-            function (/** Array */ data) {
-                get_variant_list.variants = {};
-                $variant_list.empty().append($('<option/>'));
-                data.forEach(
-                    function (/** Array */ segments) {
-                        const variant = new Variant(segments[2], Number(segments[0]), segments[3], segments[4]);
-                        get_variant_list.variants[variant.id] = variant;
-                    }
-                );
-                Object.values(get_variant_list.variants)
-                    .sort(
-                        function (/** Variant */ a, /** Variant */ b) {
-                            return a.index - b.index;
-                        }
-                    )
-                    .forEach(
-                        function (/** Variant */ variant) {
-                            $variant_list.append(
-                                $('<option/>').attr('value', variant.id).text(variant.index + ' ' + variant.description)
-                            );
-                        }
-                    );
-                $variant_list.removeAttr('disabled');
-            }
-        )
-    )
-
-}
-
-get_variant_list.variants = {};
 
 function get_eta(/** Number */ batch, /** String */ company_id, /** String */ stop_id, /** String */ route_id) {
     ++get_eta.remaining;
@@ -384,57 +410,7 @@ function get_syscode() {
     return source_string + md5(source_string + 'firstbusmwymwy');
 }
 
-(function () {
-    let load_from_cache = false;
-    if (is_storage_available()) {
-        try {
-            const storage_updated = localStorage.getItem('updated');
-            if (storage_updated !== null) {
-                const route_data_updated = new Date(+storage_updated);
-                // update time daily: 03:00 & 21:00 (Hong Kong Time)
-                const now = new Date();
-                const getChangeover = function (hour) {
-                    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - (now.getUTCHours() < hour), hour, 0, 0))
-                };
-                const time0300 = getChangeover(19);
-                const time2100 = getChangeover(13);
-                if (!(route_data_updated.getTime() < time0300.getTime() || route_data_updated.getTime() < time2100.getTime())) {
-                    load_from_cache = true;
-                }
-            }
-        } catch (e) {
-            // do not do anything if local storage is corrupted
-        }
-    }
-    load_from_cache = false;
-    if (load_from_cache) {
-        try {
-            routes = JSON.parse(localStorage.getItem('routes'));
-            stops = JSON.parse(localStorage.getItem('stops'));
-            route_stop = JSON.parse(localStorage.getItem('route_stop'));
-            stop_route = JSON.parse(localStorage.getItem('stop_route'));
-            get_route_list.remaining = 0;
-            return;
-        } catch (e) {
-            // auto fallback without cache
-        }
-    }
-    localStorage.clear();
-    get_route_list();
-})();
-
 function update_route_list(routes) {
-    let routes_array = Object.values(routes);
-    $route_list.empty().append($('<option/>')).append(
-        routes_array.sort(Route.compare).map(
-            function (/** Route */ route) {
-                return $('<option></option>').attr('value', route.id)
-                    .text(route.number + ' ' + route.origin + (route.number_of_ways === 0 ? ' ↺ ' : ' → ') + route.destination);
-            }
-        )
-    ).removeAttr('disabled');
-    $route.removeAttr('disabled');
-    $route_submit.removeAttr('disabled');
 }
 
 $(document).ready(
@@ -500,7 +476,7 @@ $(document).ready(
 
         $route_list.attr('disabled', 'disabled').change(
             function () {
-                const route = routes[$('#route_list option:selected').first().val()];
+                const route = Route.all[$('#route_list option:selected').first().val()];
                 $route.val(route.number);
                 $direction.val(route.direction);
                 if (route.number_of_ways === 2) {
@@ -508,7 +484,7 @@ $(document).ready(
                 } else {
                     $switch_direction.attr('disabled', 'disabled');
                 }
-                get_variant_list(route);
+                Variant.get(route);
             }
         );
 
@@ -516,9 +492,9 @@ $(document).ready(
             function () {
                 const input = $route.val().toUpperCase();
                 $route.val(input);
-                for (const i in routes) {
-                    if (routes.hasOwnProperty(i) && routes[i].number === input) {
-                        $route_list.val(routes[i].id).change();
+                for (const i in Route.all) {
+                    if (Route.all.hasOwnProperty(i) && Route.all[i].number === input) {
+                        $route_list.val(Route.all[i].id).change();
                         return false;
                     }
                 }
@@ -529,10 +505,10 @@ $(document).ready(
 
         $switch_direction.attr('disabled', 'disabled').click(
             function () {
-                const route = routes[$('#route_list option:selected').first().val()];
-                for (const i in routes) {
-                    if (routes.hasOwnProperty(i) && routes[i].number === route.number && routes[i].direction !== route.direction) {
-                        $route_list.val(routes[i].id).change();
+                const route = Route.all[$('#route_list option:selected').first().val()];
+                for (const i in Route.all) {
+                    if (Route.all.hasOwnProperty(i) && Route.all[i].number === route.number && Route.all[i].direction !== route.direction) {
+                        $route_list.val(Route.all[i].id).change();
                         return;
                     }
                 }
@@ -541,7 +517,7 @@ $(document).ready(
 
         $variant_list.attr('disabled', 'disabled').change(
             function () {
-                get_stop_list(get_variant_list.variants[$('#variant_list option:selected').first().val()])
+                Stop.get(Variant.all[$('#variant_list option:selected').first().val()])
             }
         );
 
@@ -555,7 +531,7 @@ $(document).ready(
                             function (/** RouteStop */ data) {
                                 const inner_route_id = data.route_id;
                                 const inner_direction = data.direction;
-                                const inner_route = routes[inner_route_id];
+                                const inner_route = Route.all[inner_route_id];
                                 const $element = $('<option></option>')
                                     .attr('value', inner_route.company + '-' + inner_route_id + '-' + (inner_direction ? 'I' : 'O'))
                                     .text(inner_route_id + ' ' + (inner_direction ? inner_route.destination : inner_route.origin) + ' → ' + (inner_direction ? inner_route.origin : inner_route.destination));
@@ -573,5 +549,6 @@ $(document).ready(
         );
 
         $common_route_list.attr('disabled', 'disabled').change(get_all_etas_from_ui);
+        Route.get();
     }
 );
