@@ -140,8 +140,8 @@ Variant.get = function (/** Route */ route) {
 
 
 class Stop {
-    constructor(/** String */ id, /** String */ name) {
-        this.id = id;
+    constructor(/** int */ id, /** String */ name) {
+        this.id = Number(id);
         this.name = name;
     }
 }
@@ -185,7 +185,7 @@ StopRoute.get = function (/** Stop */ stop) {
     StopRoute.all = {};
     $.get(
         proxy_url + base_url + 'getrouteinstop_eta_extra.php'
-        , {syscode : get_syscode(), l : 1, id : this.id}
+        , {syscode : get_syscode(), l : 1, id : stop.id}
         , handle_mobile_api_result(
             function (/** Array */ data) {
                 let routes = [];
@@ -234,20 +234,22 @@ StopRoute.get = function (/** Stop */ stop) {
 };
 
 class Eta {
-    constructor(/** String */ route_id, /** Boolean */ direction, /** Date */ time, /** String */ destination, /** String */ remark) {
+    constructor(/** String */ route_id, /** Date */ time, /** String */ destination, /** int */ distance, /** String */ description, /** String */ remark) {
         this.route_id = route_id;
-        this.direction = direction;
         this.time = time;
+        this.distance = distance;
         this.destination = destination;
+        this.description = description;
         this.remark = remark;
     }
 }
-
+Eta.all = [];
 Eta.compare = function (/** Eta */ a, /** Eta */ b) {
     return (a.time === null ? Infinity : a.time.getTime()) - (b.time === null ? Infinity : b.time.getTime());
 };
 
 Eta.get = function (/** StopRoute */ stopRoute) {
+    ++Eta.get.remaining;
     $.get(
         proxy_url + base_url + 'getnextbus2.php'
         , {
@@ -261,11 +263,39 @@ Eta.get = function (/** StopRoute */ stopRoute) {
         }
         , handle_mobile_api_result(
             function (/** Array */ data) {
+                if (!data.length || !data[0].length || data[0][0] === 'HTML') {
+                    return;
+                }
                 console.log(data);
+                data.forEach(
+                    function (/** Array */ segments) {
+                        Eta.all.push(new Eta(segments[1], new Date(segments[19].split('|')[0]), segments[2], Number(segments[13]), segments[17].split('|')[0], segments[18].split('|')[0]));
+                    }
+                );
+                --Eta.get.remaining;
+                if (Eta.get.remaining === 0) {
+                    Eta.all.sort(Eta.compare);
+                    $eta_body.empty()
+                        .append(
+                            Eta.all.slice(0, 3).map(
+                                function (/** Eta */ eta) {
+                                    return $('<tr/>')
+                                        .append($('<td/>').text(eta.time === null ? '' : eta.time.hhmmss()))
+                                        .append($('<td/>').text(eta.route_id))
+                                        .append($('<td/>').text(eta.destination))
+                                        .append($('<td/>').text(eta.description))
+                                        .append($('<td/>').text(eta.remark));
+                                }
+                            )
+                        );
+                    $eta_loading.css('display', 'none');
+                    $eta_last_updated.text((new Date).hhmmss());
+                }
             }
         )
     );
 };
+Eta.get.remaining = 0;
 
 function compare_route_number(/** String */ a, /** String */ b) {
     function explode_segments(/** String */ route_id) {
@@ -372,40 +402,6 @@ function get_eta(/** Number */ batch, /** String */ company_id, /** String */ st
                 );
             }
             if (--get_eta.remaining === 0) {
-                etas.sort(Eta.compare);
-                $eta_body.empty()
-                    .append(
-                        etas.filter(
-                            function (/** Eta */ eta) {
-                                function match(value) {
-                                    const segments = value.split('-');
-                                    return eta.route_id === segments[1]
-                                        && eta.direction === (segments[2] === 'I');
-                                }
-                                return eta.time !== null && get_all_etas.selections.filter(match).length > 0;
-                            }
-                        ).slice(0, 3).map(
-                            function (/** Eta */ eta) {
-                                return $('<tr/>')
-                                    .append($('<td/>').text(eta.time === null ? '' : eta.time.hhmmss()))
-                                    .append($('<td/>').text(eta.route_id))
-                                    .append($('<td/>').text(eta.destination))
-                                    .append($('<td/>').text(eta.remark));
-                            }
-                        )
-                    );
-                $eta_loading.css('display', 'none');
-                $eta_last_updated.text((new Date).hhmmss());
-                if (get_all_etas.handler !== null) {
-                    window.clearTimeout(get_all_etas.handler);
-                    get_all_etas.handler = null;
-                }
-                get_all_etas.handler = window.setTimeout(
-                    function () {
-                        get_all_etas(get_all_etas.stop_id, get_all_etas.selections)
-                    }
-                    , 15000
-                );
             }
         }
     );
@@ -577,7 +573,7 @@ $(document).ready(
         $common_route_list.attr('disabled', 'disabled').change(
             function () {
                 $('#common_route_list option:selected').each(
-                    function (element) {
+                    function (index, element) {
                         Eta.get(StopRoute.all[$(element).attr('value')]);
                     }
                 )
