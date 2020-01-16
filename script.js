@@ -1,8 +1,7 @@
 'use strict';
 
-const base_url = 'https://rt.data.gov.hk/';
 const proxy_url = 'https://cors-anywhere.herokuapp.com/';
-
+const base_url = 'https://mobile.nwstbus.com.hk/api6/';
 /*
  * Test cases:
  * 1. real circular route (e.g. 701 test Hoi Lai Estate, Fu Cheong Estate, Bute Street, Mong Kok Road, Island Harbourview, Nam Cheong Estate)
@@ -54,6 +53,9 @@ class Route {
     }
 }
 
+Route.prototype.getDescription = function () {
+    return this.number + ' ' + this.origin + (this.number_of_ways === 0 ? ' ↺ ' : ' → ') + this.destination;
+};
 Route.compare = function (/** Route */ a, /** Route */ b) {
     return a.number === b.number
         ? a.direction > b.direction ? -1 : a.direction < b.direction ? 1 : 0
@@ -65,7 +67,7 @@ Route.get = function () {
     $route.val('').attr('disabled', 'disabled');
     $route_submit.attr('disabled', 'disabled');
     $.get(
-        proxy_url + 'https://mobile.nwstbus.com.hk/api6/getroutelist2.php'
+        proxy_url + base_url + 'getroutelist2.php'
         , {syscode : get_syscode(), l : 1}
         , handle_mobile_api_result(
             function (/** Array */ data) {
@@ -79,8 +81,7 @@ Route.get = function () {
                 $route_list.empty().append($('<option/>')).append(
                     routes_array.sort(Route.compare).map(
                         function (/** Route */ route) {
-                            return $('<option></option>').attr('value', route.id)
-                                .text(route.number + ' ' + route.origin + (route.number_of_ways === 0 ? ' ↺ ' : ' → ') + route.destination);
+                            return $('<option></option>').attr('value', route.id).text(route.getDescription());
                         }
                     )
                 ).removeAttr('disabled');
@@ -105,7 +106,7 @@ Variant.get = function (/** Route */ route) {
     Variant.all = {};
     $variant_list.empty().attr('disabled', 'disabled');
     $.get(
-        proxy_url + 'https://mobile.nwstbus.com.hk/api6/getvariantlist.php'
+        proxy_url + base_url + 'getvariantlist.php'
         , {syscode : get_syscode(), l : 1, id : route.id}
         , handle_mobile_api_result(
             function (/** Array */ data) {
@@ -145,6 +146,42 @@ class Stop {
         this.sequence = sequence;
     }
 }
+
+Stop.prototype.getRoutes = function () {
+    $common_route_list.empty().attr('disabled', 'disabled');
+    $.get(
+        proxy_url + base_url + 'getrouteinstop_eta_extra.php'
+        , {syscode : get_syscode(), l : 1, id : this.id}
+        , handle_mobile_api_result(
+            function (/** Array */ data) {
+                let routes = [];
+                data
+                    .filter(
+                        function (/** Array */ segments) {
+                            return segments.length >= 20;
+                        }
+                    )
+                    .map(
+                        function (/** Array */ segments) {
+                            console.log(segments);
+                            return new Route(segments[0], segments[6], segments[1], segments[9], segments[2], segments[12], Number(segments[4]));
+                        }
+                    )
+                    .sort(Route.compare)
+                    .forEach(
+                        function (/** Route */ route) {
+                            const $element = $('<option></option>').attr('value', route.id).text(route.getDescription());
+                            if (route.id === $route_list.val()) {
+                                $element.attr('selected', 'selected');
+                            }
+                            $common_route_list.append($element);
+                        }
+                    );
+                $common_route_list.removeAttr('disabled');
+            }
+        )
+    );
+};
 
 class RouteStop {
     constructor(/** String */ stop_id, /** String */ route_id, /** Boolean */ direction) {
@@ -264,13 +301,12 @@ Stop.get = function (/** Variant */ variant) {
     Stop.all = [];
     $stop_list.empty().attr('disabled', 'disabled');
     $.get(
-        proxy_url + 'https://mobile.nwstbus.com.hk/api6/ppstoplist.php'
+        proxy_url + base_url + 'ppstoplist.php'
         , {syscode : get_syscode(), l : 1, info : '0|*|' + variant.info.replace(/\*\*\*/g, '||')}
         , handle_mobile_api_result(
             function (/** Array */ data) {
                 data.forEach(
                     function (/** Array */ segments) {
-                        console.log(segments);
                         stop = new Stop(segments[3], Number(segments[2]), segments[7]);
                         Stop.all[stop.sequence] = stop;
                     }
@@ -523,27 +559,9 @@ $(document).ready(
 
         $stop_list.attr('disabled', 'disabled').change(
             function () {
-                const stop_id = $('#stop_list option:selected').first().val();
-                $common_route_list.empty();
-                if (stop_id !== '') {
-                    $common_route_list.append(
-                        stop_route[stop_id].map(
-                            function (/** RouteStop */ data) {
-                                const inner_route_id = data.route_id;
-                                const inner_direction = data.direction;
-                                const inner_route = Route.all[inner_route_id];
-                                const $element = $('<option></option>')
-                                    .attr('value', inner_route.company + '-' + inner_route_id + '-' + (inner_direction ? 'I' : 'O'))
-                                    .text(inner_route_id + ' ' + (inner_direction ? inner_route.destination : inner_route.origin) + ' → ' + (inner_direction ? inner_route.origin : inner_route.destination));
-                                if (inner_route_id === $route.val() && inner_direction === ($direction.val() === 'I')) {
-                                    $element.attr('selected', 'selected');
-                                }
-                                return $element;
-                            }
-                        )
-                    ).removeAttr('disabled');
-                    $('#selection_submit').removeAttr('disabled');
-                    get_all_etas_from_ui();
+                stop = Stop.all[$('#stop_list option:selected').first().val()];
+                if (stop instanceof Stop) {
+                    stop.getRoutes();
                 }
             }
         );
