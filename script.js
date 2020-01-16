@@ -140,15 +140,49 @@ Variant.get = function (/** Route */ route) {
 
 
 class Stop {
-    constructor(/** String */ id, /** int */ sequence, /** String */ name) {
+    constructor(/** String */ id, /** String */ name) {
         this.id = id;
         this.name = name;
+    }
+}
+
+Stop.get = function (/** Variant */ variant) {
+    Stop.all = [];
+    $stop_list.empty().attr('disabled', 'disabled');
+    $.get(
+        proxy_url + base_url + 'ppstoplist.php'
+        , {syscode : get_syscode(), l : 1, info : '0|*|' + variant.info.replace(/\*\*\*/g, '||')}
+        , handle_mobile_api_result(
+            function (/** Array */ data) {
+                data.forEach(
+                    function (/** Array */ segments) {
+                        const stop = new Stop(segments[3], segments[7]);
+                        const stopRoute = new StopRoute(stop, variant, Number(segments[2]));
+                        Stop.all[stopRoute.sequence] = stop;
+                    }
+                );
+                $stop_list.empty().append($('<option/>')).append(
+                    Stop.all.map(
+                        function (/** Stop */ stop, /** int */ index) {
+                            return $('<option></option>').attr('value', index).text(index + ' ' + stop.name);
+                        }
+                    )
+                ).removeAttr('disabled');
+            }
+        )
+    );
+};
+class StopRoute {
+    constructor(/** Stop */ stop, /** Variant */ variant, /** int */ sequence) {
+        this.stop = stop;
+        this.variant = variant;
         this.sequence = sequence;
     }
 }
 
-Stop.prototype.getRoutes = function () {
+StopRoute.get = function (/** Stop */ stop) {
     $common_route_list.empty().attr('disabled', 'disabled');
+    StopRoute.all = {};
     $.get(
         proxy_url + base_url + 'getrouteinstop_eta_extra.php'
         , {syscode : get_syscode(), l : 1, id : this.id}
@@ -165,7 +199,8 @@ Stop.prototype.getRoutes = function () {
                         function (/** Array */ segments) {
                             console.log(segments);
                             return new StopRoute(
-                                new Variant(
+                                stop
+                                , new Variant(
                                     new Route(segments[0], segments[6], segments[1], segments[9], segments[2], segments[12], Number(segments[4]))
                                     , segments[14]
                                 )
@@ -180,6 +215,7 @@ Stop.prototype.getRoutes = function () {
                     )
                     .forEach(
                         function (/** StopRoute */ stopRoute) {
+                            StopRoute.all[stopRoute.variant.route.id] = stopRoute;
                             const $element = $('<option></option>').attr('value', stopRoute.variant.route.id).text(stopRoute.variant.route.getDescription());
                             if (stopRoute.variant.route.id === $route_list.val()) {
                                 $element.attr('selected', 'selected');
@@ -197,38 +233,6 @@ Stop.prototype.getRoutes = function () {
     );
 };
 
-Stop.get = function (/** Variant */ variant) {
-    Stop.all = [];
-    $stop_list.empty().attr('disabled', 'disabled');
-    $.get(
-        proxy_url + base_url + 'ppstoplist.php'
-        , {syscode : get_syscode(), l : 1, info : '0|*|' + variant.info.replace(/\*\*\*/g, '||')}
-        , handle_mobile_api_result(
-            function (/** Array */ data) {
-                data.forEach(
-                    function (/** Array */ segments) {
-                        stop = new Stop(segments[3], Number(segments[2]), segments[7]);
-                        Stop.all[stop.sequence] = stop;
-                    }
-                );
-                $stop_list.empty().append($('<option/>')).append(
-                    Stop.all.map(
-                        function (/** Stop */ stop) {
-                            return $('<option></option>').attr('value', stop.sequence).text(stop.sequence + ' ' + stop.name);
-                        }
-                    )
-                ).removeAttr('disabled');
-            }
-        )
-    );
-};
-class StopRoute {
-    constructor(/** Variant */ variant, /** int */ sequence) {
-        this.variant = variant;
-        this.sequence = sequence;
-    }
-}
-
 class Eta {
     constructor(/** String */ route_id, /** Boolean */ direction, /** Date */ time, /** String */ destination, /** String */ remark) {
         this.route_id = route_id;
@@ -241,6 +245,26 @@ class Eta {
 
 Eta.compare = function (/** Eta */ a, /** Eta */ b) {
     return (a.time === null ? Infinity : a.time.getTime()) - (b.time === null ? Infinity : b.time.getTime());
+};
+
+Eta.get = function (/** StopRoute */ stopRoute) {
+    $.get(
+        proxy_url + base_url + 'getnextbus2.php'
+        , {
+            syscode : get_syscode(),
+            l : 1,
+            service_no : stopRoute.variant.route.number,
+            stopseq : stopRoute.sequence,
+            stopid : stopRoute.stop.id,
+            rdv : stopRoute.variant.id,
+            bound : stopRoute.variant.route.direction
+        }
+        , handle_mobile_api_result(
+            function (/** Array */ data) {
+                console.log(data);
+            }
+        )
+    );
 };
 
 function compare_route_number(/** String */ a, /** String */ b) {
@@ -543,14 +567,22 @@ $(document).ready(
 
         $stop_list.attr('disabled', 'disabled').change(
             function () {
-                stop = Stop.all[$('#stop_list option:selected').first().val()];
+                const stop = Stop.all[$('#stop_list option:selected').first().val()];
                 if (stop instanceof Stop) {
-                    stop.getRoutes();
+                    StopRoute.get(stop)
                 }
             }
         );
 
-        $common_route_list.attr('disabled', 'disabled').change(get_all_etas_from_ui);
+        $common_route_list.attr('disabled', 'disabled').change(
+            function () {
+                $('#common_route_list option:selected').each(
+                    function (element) {
+                        Eta.get(StopRoute.all[$(element).attr('value')]);
+                    }
+                )
+            }
+        );
         Route.get();
     }
 );
