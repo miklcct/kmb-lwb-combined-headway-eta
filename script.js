@@ -1,7 +1,5 @@
 'use strict';
 
-const proxy_url = 'https://cors-anywhere.herokuapp.com/';
-const base_url = 'https://mobile.nwstbus.com.hk/api6/';
 /*
  * Test cases:
  * 1. real circular route (e.g. 701 test Hoi Lai Estate, Fu Cheong Estate, Bute Street, Mong Kok Road, Island Harbourview, Nam Cheong Estate)
@@ -67,9 +65,9 @@ Route.get = function () {
     $route.val('').attr('disabled', 'disabled');
     $route_submit.attr('disabled', 'disabled');
     $.get(
-        proxy_url + base_url + 'getroutelist2.php'
+        Common.PROXY_URL + Common.BASE_URL + 'getroutelist2.php'
         , {syscode : get_syscode(), l : 1}
-        , handle_mobile_api_result(
+        , Common.getCallbackForMobileApi(
             function (/** Array */ data) {
                 data.forEach(
                     function (/** Array */ segments) {
@@ -107,9 +105,9 @@ Variant.get = function (/** Route */ route) {
     Variant.all = {};
     $variant_list.empty().attr('disabled', 'disabled');
     $.get(
-        proxy_url + base_url + 'getvariantlist.php'
+        Common.PROXY_URL + Common.BASE_URL + 'getvariantlist.php'
         , {syscode : get_syscode(), l : 1, id : route.id}
-        , handle_mobile_api_result(
+        , Common.getCallbackForMobileApi(
             function (/** Array */ data) {
                 $variant_list.empty().append($('<option/>'));
                 data.forEach(
@@ -150,9 +148,9 @@ Stop.get = function (/** Variant */ variant) {
     Stop.all = [];
     $stop_list.empty().attr('disabled', 'disabled');
     $.get(
-        proxy_url + base_url + 'ppstoplist.php'
+        Common.PROXY_URL + Common.BASE_URL + 'ppstoplist.php'
         , {syscode : get_syscode(), l : 1, info : '0|*|' + variant.info.replace(/\*\*\*/g, '||')}
-        , handle_mobile_api_result(
+        , Common.getCallbackForMobileApi(
             function (/** Array */ data) {
                 data.forEach(
                     function (/** Array */ segments) {
@@ -184,9 +182,9 @@ StopRoute.get = function (/** Stop */ stop) {
     $common_route_list.empty().attr('disabled', 'disabled');
     StopRoute.all = {};
     $.get(
-        proxy_url + base_url + 'getrouteinstop_eta_extra.php'
+        Common.PROXY_URL + Common.BASE_URL + 'getrouteinstop_eta_extra.php'
         , {syscode : get_syscode(), l : 1, id : stop.id}
-        , handle_mobile_api_result(
+        , Common.getCallbackForMobileApi(
             function (/** Array */ data) {
                 let routes = [];
                 data
@@ -251,7 +249,7 @@ Eta.compare = function (/** Eta */ a, /** Eta */ b) {
 Eta.get = function (/** StopRoute */ stopRoute) {
     ++Eta.get.remaining;
     $.get(
-        proxy_url + base_url + 'getnextbus2.php'
+        Common.PROXY_URL + Common.BASE_URL + 'getnextbus2.php'
         , {
             syscode : get_syscode(),
             l : 1,
@@ -261,7 +259,7 @@ Eta.get = function (/** StopRoute */ stopRoute) {
             rdv : stopRoute.variant.id,
             bound : stopRoute.variant.route.direction
         }
-        , handle_mobile_api_result(
+        , Common.getCallbackForMobileApi(
             function (/** Array */ data) {
                 if (!data.length || !data[0].length || data[0][0] === 'HTML') {
                     return;
@@ -363,28 +361,12 @@ let route_stop = {};
 let stop_route = {};
 let etas = [];
 
-function handle_mobile_api_result(handler) {
-    return function (/** string */ data) {
-        handler(
-            data.split('<br>').filter(
-                function (/** String */ line) {
-                    return line !== '';
-                }
-            ).map(
-                function (/** String */ line) {
-                    return line.split('||');
-                }
-            )
-        );
-    }
-}
-
 
 
 function get_eta(/** Number */ batch, /** String */ company_id, /** String */ stop_id, /** String */ route_id) {
     ++get_eta.remaining;
     $.getJSON(
-        base_url + 'v1/transport/citybus-nwfb/eta/' + company_id + '/' + stop_id + '/' + route_id
+        Common.BASE_URL + 'v1/transport/citybus-nwfb/eta/' + company_id + '/' + stop_id + '/' + route_id
         , function (/** Object */ data) {
             if (batch === get_all_etas.batch) {
                 data.data.forEach(
