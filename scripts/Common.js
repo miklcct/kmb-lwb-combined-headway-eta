@@ -44,5 +44,11 @@ const Common = {
             )
             , Common.getCallbackForMobileApi(callback, preprocess)
         );
+    },
+    getQueryStopId : function () {
+        return (new URLSearchParams(window.location.search)).get('stop');
+    },
+    getQuerySelections : function () {
+        return (new URLSearchParams(window.location.search)).getAll('selections');
     }
 };

@@ -52,9 +52,6 @@ $(document).ready(
         const $eta_last_updated = $('#eta_last_updated');
         const $variant_list = $('#variant_list');
 
-        let query_stop_id = null;
-        let query_selections = null;
-
         $('#failure').css('display', 'none');
 
         $eta_loading.css('display', 'none');
@@ -69,6 +66,7 @@ $(document).ready(
                     } else {
                         $switch_direction.attr('disabled', 'disabled');
                     }
+                    $variant_list.empty().attr('disabled', 'disabled');
                     Variant.get(
                         route
                         , function (/** Object */ variants) {
@@ -92,14 +90,13 @@ $(document).ready(
                                                 }
                                             }
                                         );
-                                    $variant_list.append($option);
+                                        $variant_list.append($option);
                                     }
                                 );
+                            $variant_list.removeAttr('disabled');
                             $variant_list.change();
                         }
                     );
-                } else {
-                    $variant_list.change();
                 }
             }
         );
@@ -108,18 +105,39 @@ $(document).ready(
             function () {
                 const input = $route.val().toUpperCase();
                 $route.val(input);
-                let found = false;
+                const found = [];
                 $route_list.children().each(
                     function () {
                         const route = $(this).data('model');
                         if (route !== undefined && input === route.number) {
-                            found = true;
-                            $route_list.val(route.id).change();
-                            return false;
+                            found.push(route);
                         }
                     }
                 );
-                if (!found) {
+                if (found.length) {
+                    let changed = false;
+                    found.forEach(
+                        function (/** Route */ route) {
+                            $common_route_list.children(0).each(
+                                function () {
+                                    const model = $(this).data('model');
+                                    if (model !== undefined && model.variant.route.id === route.id) {
+                                        $route_list.val(route.id);
+                                        changed = true;
+                                        return false;
+                                    }
+                                }
+                            );
+                            if (changed) {
+                                return false;
+                            }
+                        }
+                    );
+                    if (!changed) {
+                        $route_list.val(found[0].id);
+                    }
+                    $route_list.change();
+                } else {
                     alert('Invalid route');
                 }
                 return false;
@@ -148,10 +166,10 @@ $(document).ready(
                 const variant = $('#variant_list option:selected').first().data('model');
 
                 if (variant !== undefined) {
+                    $stop_list.empty().attr('disabled', 'disabled');
                     Stop.get(
                         variant
                         , function (/** Array */ stops) {
-                            const selected_stop_id = $stop_list.val();
                             $stop_list.empty().append($('<option/>'));
                             $stop_list.append(
                                 stops.map(
@@ -162,38 +180,66 @@ $(document).ready(
                                             .data('model', stop);
                                     }
                                 )
-                            );
-                            $stop_list.val(query_stop_id ? query_stop_id : selected_stop_id);
-                            $stop_list.change();
+                            ).removeAttr('disabled');
+                            const query_stop_id = Common.getQueryStopId();
+                            if (query_stop_id !== null) {
+                                $stop_list.val(query_stop_id);
+                            }
+                            if ($stop_list.val()) {
+                                $stop_list.change();
+                            }
                         }
                     );
-                } else {
-                    $stop_list.change();
                 }
             }
         );
 
-        const update_route_list = function (/** Object */ routes) {
-            let routes_array = Object.values(routes);
-            $route_list.empty().append($('<option/>')).append(
-                routes_array.sort(Route.compare).map(
-                    function (/** Route */ route) {
-                        return $('<option></option>').attr('value', route.id).text(route.getDescription())
-                            .data('model', route);
+        function load_route_list() {
+            function choose_route() {
+                const original = $route_list.val();
+                const query_selections = Common.getQuerySelections();
+                if (query_selections.length) {
+                    $route_list.val(query_selections[0]);
+                    if ($route_list.val() !== original) {
+                        $route_list.change();
                     }
-                )
-            );
-            if (query_selections !== null) {
-                $route_list.val(query_selections[0]).change();
+                }
             }
-        };
+
+            if (!load_route_list.loaded) {
+                [$route, $route_list, $route_submit, $switch_direction].forEach(
+                    function ($element) {
+                        $element.attr('disabled');
+                    }
+                );
+                $route_list.empty();
+                Route.get(
+                    function (/** Object */ routes) {
+                        let routes_array = Object.values(routes);
+                        $route_list.empty().append($('<option/>')).append(
+                            routes_array.sort(Route.compare).map(
+                                function (/** Route */ route) {
+                                    return $('<option></option>').attr('value', route.id).text(route.getDescription())
+                                        .data('model', route);
+                                }
+                            )
+                        );
+                        [$route, $route_list, $route_submit].forEach(
+                            function ($element) {
+                                $element.removeAttr('disabled');
+                            }
+                        );
+                        load_route_list.loaded = true;
+                        choose_route();
+                    }
+                );
+            } else {
+                choose_route();
+            }
+        }
+        load_route_list.loaded = false;
 
         const update_common_route_list = function (/** Object */ result) {
-            const old_selections = $('#common_route_list option:selected').map(
-                function () {
-                    return $(this).attr('value');
-                }
-            ).get();
             $common_route_list.empty();
             Object.values(result).sort(
                 function (/** StopRoute */ a, /** StopRoute */ b) {
@@ -205,10 +251,10 @@ $(document).ready(
                         const $element = $('<option></option>').attr('value', stopRoute.variant.route.id)
                             .text(stopRoute.variant.route.getDescription())
                             .data('model', stopRoute);
+                        const query_selections = Common.getQuerySelections();
                         if (
-                            (query_selections !== null && query_selections.includes(stopRoute.variant.route.id))
+                            query_selections.includes(stopRoute.variant.route.id)
                             || stopRoute.variant.route.id === $route_list.val()
-                            || old_selections.includes(stopRoute.variant.route.id)
                         ) {
                             $element.attr('selected', 'selected');
                             const $selected_stop = $('#stop_list option:selected').first();
@@ -234,15 +280,17 @@ $(document).ready(
                         $common_route_list.append($element);
                     }
                 );
-            $common_route_list.change();
-            if (query_selections !== null) {
-                Route.get(update_route_list);
-            }
+            $common_route_list.removeAttr('disabled').change();
+            load_route_list();
         };
 
         function save_state() {
-            const query_string = '?' + $('#form').serialize();
-            if (window.location.search !== query_string) {
+            const query = new URLSearchParams($('#form').serialize());
+            if (query.get('stop') === null && Common.getQueryStopId() !== null) {
+                query.append('stop', Common.getQueryStopId());
+            }
+            if (query.get('stop') !== null && window.location.search !== '?' + query.toString()) {
+                const query_string = '?' + query.toString();
                 window.history.pushState(query_string, undefined, query_string);
             }
         }
@@ -251,29 +299,47 @@ $(document).ready(
             function () {
                 const stop = $('#stop_list option:selected').first().data('model');
                 if (stop !== undefined) {
+                    save_state();
+                    $common_route_list.empty().attr('disabled', 'disabled');
+                    clearTimeout(update_eta.timer);
                     StopRoute.get(
                         stop
-                        , function (result) {
-                            query_stop_id = null;
-                            query_selections = null;
-                            update_common_route_list(result);
-                        }
+                        , update_common_route_list
                     );
-                } else {
-                    query_stop_id = null;
-                    query_selections = null;
                 }
             }
         );
 
         const update_eta = function () {
-            save_state();
             clearTimeout(update_eta.timer);
             $eta_loading.css('display', 'block');
             let count = 0;
             ++update_eta.batch;
             const batch = update_eta.batch;
             const all_etas = [];
+
+            function show_eta() {
+                if (count === 0) {
+                    all_etas.sort(Eta.compare);
+                    $eta_body.empty()
+                        .append(
+                            all_etas.slice(0, 3).map(
+                                function (/** Eta */ eta) {
+                                    return $('<tr/>')
+                                        .append($('<td/>').text(eta.time === null ? '' : eta.time.hhmmss()))
+                                        .append($('<td/>').text(eta.route_id))
+                                        .append($('<td/>').text(eta.destination))
+                                        .append($('<td/>').text(eta.description))
+                                        .append($('<td/>').text(eta.remark));
+                                }
+                            )
+                        );
+                    $eta_loading.css('display', 'none');
+                    $eta_last_updated.text((new Date).hhmmss());
+                    update_eta.timer = setTimeout(update_eta, 15000);
+                }
+            }
+
             $('#common_route_list option:selected').each(
                 function () {
                     const model = $(this).data('model');
@@ -284,49 +350,35 @@ $(document).ready(
                             , function (/** Array */ etas) {
                                 if (batch === update_eta.batch) {
                                     all_etas.push(...etas);
-                                    if (--count === 0) {
-                                        all_etas.sort(Eta.compare);
-                                        $eta_body.empty()
-                                            .append(
-                                                all_etas.slice(0, 3).map(
-                                                    function (/** Eta */ eta) {
-                                                        return $('<tr/>')
-                                                            .append($('<td/>').text(eta.time === null ? '' : eta.time.hhmmss()))
-                                                            .append($('<td/>').text(eta.route_id))
-                                                            .append($('<td/>').text(eta.destination))
-                                                            .append($('<td/>').text(eta.description))
-                                                            .append($('<td/>').text(eta.remark));
-                                                    }
-                                                )
-                                            );
-                                        $eta_loading.css('display', 'none');
-                                        $eta_last_updated.text((new Date).hhmmss());
-                                        update_eta.timer = setTimeout(update_eta, 15000);
-                                    }
+                                    --count;
+                                    show_eta();
                                 }
                             }
                         );
                     }
                 }
-            )
+            );
+            show_eta();
         };
         update_eta.batch = 0;
 
-        $common_route_list.change(update_eta);
+        $common_route_list.change(
+            function () {
+                save_state();
+                update_eta();
+            }
+        );
 
         function init() {
-            $common_route_list.empty();
-            (function (query_string) {
-                if (query_string.has('stop') && query_string.has('selections')) {
-                    query_stop_id = query_string.get('stop');
-                    query_selections = query_string.getAll('selections');
-                }
-            })(new URLSearchParams(window.location.search));
 
-            if (query_stop_id !== null) {
-                StopRoute.get(new Stop(Number(query_stop_id), null), update_common_route_list);
+            const stop_id = Common.getQueryStopId();
+            if (stop_id !== null) {
+                StopRoute.get(
+                    new Stop(stop_id, null)
+                    , update_common_route_list
+                );
             } else {
-                Route.get(update_route_list);
+                load_route_list();
             }
         }
 
