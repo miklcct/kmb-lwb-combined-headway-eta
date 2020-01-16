@@ -15,8 +15,7 @@ Eta.compare = function (/** Eta */ a, /** Eta */ b) {
     return (a.time === null ? Infinity : a.time.getTime()) - (b.time === null ? Infinity : b.time.getTime());
 };
 
-Eta.get = function (/** StopRoute */ stopRoute) {
-    ++Eta.get.remaining;
+Eta.get = function (/** StopRoute */ stopRoute, /** Function */ callback) {
     Common.callApi(
         'getnextbus2.php'
         , {
@@ -27,36 +26,27 @@ Eta.get = function (/** StopRoute */ stopRoute) {
             bound : stopRoute.variant.route.direction
         }
         , function (/** Array */ data) {
-            if (!data.length || !data[0].length || data[0][0] === 'HTML') {
-                return;
+            const etas = [];
+            if (data.length && data[0].length && data[0][0] !== 'HTML') {
+                data.forEach(
+                    function (/** Array */ segments) {
+                        if (segments.length >= 20) {
+                            etas.push(
+                                new Eta(
+                                    segments[1]
+                                    , new Date(segments[19].split('|')[0])
+                                    , segments[2]
+                                    , Number(segments[13])
+                                    , segments[17].split('|')[0]
+                                    , segments[18].split('|')[0]
+                                )
+                            );
+                        }
+                    }
+                );
             }
-            console.log(data);
-            data.forEach(
-                function (/** Array */ segments) {
-                    Eta.all.push(new Eta(segments[1], new Date(segments[19].split('|')[0]), segments[2], Number(segments[13]), segments[17].split('|')[0], segments[18].split('|')[0]));
-                }
-            );
-            --Eta.get.remaining;
-            if (Eta.get.remaining === 0) {
-                Eta.all.sort(Eta.compare);
-                $eta_body.empty()
-                    .append(
-                        Eta.all.slice(0, 3).map(
-                            function (/** Eta */ eta) {
-                                return $('<tr/>')
-                                    .append($('<td/>').text(eta.time === null ? '' : eta.time.hhmmss()))
-                                    .append($('<td/>').text(eta.route_id))
-                                    .append($('<td/>').text(eta.destination))
-                                    .append($('<td/>').text(eta.description))
-                                    .append($('<td/>').text(eta.remark));
-                            }
-                        )
-                    );
-                $eta_loading.css('display', 'none');
-                $eta_last_updated.text((new Date).hhmmss());
-            }
+            callback(etas);
         }
     );
 };
-Eta.get.remaining = 0;
 

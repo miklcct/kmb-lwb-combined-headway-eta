@@ -8,7 +8,6 @@ class Stop {
 }
 
 Stop.get = function (/** Variant */ variant, /** Function */ callback) {
-    $stop_list.empty().attr('disabled', 'disabled');
     Common.callApi(
         'ppstoplist.php'
         , {info : '0|*|' + variant.info.replace(/\*\*\*/g, '||')}

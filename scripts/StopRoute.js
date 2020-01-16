@@ -21,7 +21,6 @@ StopRoute.get = function (/** Stop */ stop, /** Function */ callback) {
             )
                 .forEach(
                     function (/** Array */ segments) {
-                        console.log(segments);
                         const item = new StopRoute(
                             stop
                             , new Variant(
@@ -31,7 +30,7 @@ StopRoute.get = function (/** Stop */ stop, /** Function */ callback) {
                                 , segments[17]
                                 , null
                             )
-                            , segments[13]
+                            , Number(segments[13])
                         );
                         results[item.variant.route.id] = item;
                     }
