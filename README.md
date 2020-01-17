@@ -22,5 +22,7 @@ of the desired combination is shown directly without selecting again.
 [A demo instance is set up.](https://miklcct.com/nwfb_eta)
 
 ## Issues
-Known issues related to the deficiency of the Citybus / NWFB ETA API 
-is listed on [GitHub](https://github.com/miklcct/ctb-nwfb-combined-headway-eta/issues/1).
+A proxy server is required to bypass the CORS restriction.
+The proxy URL is defined in `scripts/Common.js`.
+The address provided in the repository is a private proxy server which can only be used to 
+query the NWFB mobile API.

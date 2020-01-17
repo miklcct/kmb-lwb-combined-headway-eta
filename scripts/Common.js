@@ -1,8 +1,8 @@
 'use strict';
 
 const Common = {
-    PROXY_URL : 'https://cors-anywhere.herokuapp.com/',
-    BASE_URL : 'https://mobile.nwstbus.com.hk/api6/',
+    PROXY_URL : 'https://miklcct.com/proxy/',
+    BASE_URL : 'https://mobile02.nwstbus.com.hk/api6/',
 
     /**
      * Get a callback for AJAX to call the NWFB mobile API and process through handler
