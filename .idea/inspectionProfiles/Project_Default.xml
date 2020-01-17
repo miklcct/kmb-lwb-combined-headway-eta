@@ -69,6 +69,20 @@
       </option>
       <option name="migratedIntoUserSpace" value="true" />
     </inspection_tool>
+    <inspection_tool class="JSIncompatibleTypesComparison" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="JSNonStrictModeUsed" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="JSUndeclaredVariable" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="myCheckGlobalDefinitions" value="true" />
+    </inspection_tool>
+    <inspection_tool class="JSUnresolvedFunction" enabled="true" level="ERROR" enabled_by_default="true">
+      <option name="myStrictlyCheckGlobalDefinitions" value="true" />
+    </inspection_tool>
+    <inspection_tool class="JSUnresolvedVariable" enabled="true" level="ERROR" enabled_by_default="true">
+      <option name="myStrictlyCheckGlobalDefinitions" value="true" />
+    </inspection_tool>
+    <inspection_tool class="JSUnusedGlobalSymbols" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="JSUnusedLocalSymbols" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="JSValidateTypes" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="MkdirRaceConditionInspection" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="NullPointerExceptionInspection" enabled="true" level="ERROR" enabled_by_default="true" />
     <inspection_tool class="OffsetOperationsInspection" enabled="true" level="ERROR" enabled_by_default="true" />
@@ -161,5 +175,6 @@
     <inspection_tool class="UnusedGotoLabelInspection" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="UselessUnsetInspection" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="UsingInclusionOnceReturnValueInspection" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="XmlDefaultAttributeValue" enabled="false" level="WARNING" enabled_by_default="false" />
   </profile>
 </component>

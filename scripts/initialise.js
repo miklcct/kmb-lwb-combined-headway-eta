@@ -82,8 +82,9 @@ $(document).ready(
                                         const $option = $('<option/>').attr('value', variant.id)
                                             .text(variant.sequence + ' ' + variant.description)
                                             .data('model', variant);
-                                        $common_route_list.children().each(
-                                            function () {
+                                        $.each(
+                                            $common_route_list.children()
+                                            , function () {
                                                 const model = $(this).data('model');
                                                 if (model !== undefined && model.variant.id === variant.id) {
                                                     $option.attr('selected', 'selected');
@@ -106,8 +107,9 @@ $(document).ready(
                 const input = $route.val().toUpperCase();
                 $route.val(input);
                 const found = [];
-                $route_list.children().each(
-                    function () {
+                $.each(
+                    $route_list.children()
+                    , function () {
                         const route = $(this).data('model');
                         if (route !== undefined && input === route.number) {
                             found.push(route);
@@ -118,8 +120,9 @@ $(document).ready(
                     let changed = false;
                     found.forEach(
                         function (/** Route */ route) {
-                            $common_route_list.children(0).each(
-                                function () {
+                            $.each(
+                                $common_route_list.children()
+                                , function () {
                                     const model = $(this).data('model');
                                     if (model !== undefined && model.variant.route.id === route.id) {
                                         $route_list.val(route.id);
@@ -148,8 +151,9 @@ $(document).ready(
             function () {
                 const selected_route = $('#route_list option:selected').first().data('model');
                 if (selected_route !== undefined) {
-                    $route_list.children().each(
-                        function () {
+                    $.each(
+                        $route_list.children()
+                        , function () {
                             const route = $(this).data('model');
                             if (route !== undefined && selected_route.number === route.number && selected_route.direction !== route.direction) {
                                 $route_list.val(route.id).change();
@@ -265,8 +269,9 @@ $(document).ready(
                                 && selected_sequence !== undefined && stopRoute.sequence !== selected_sequence
                             ) {
                                 // this is needed to handle a route passing the same stop twice, e.g. 2X or 796X
-                                $stop_list.children().each(
-                                    function () {
+                                $.each(
+                                    $stop_list.children()
+                                    , function () {
                                         const $this = $(this);
                                         const sequence = $this.data('sequence');
                                         if (stopRoute.stop.id === stop.id && sequence === stopRoute.sequence) {
@@ -287,7 +292,7 @@ $(document).ready(
         function save_state() {
             const query = new URLSearchParams($('#form').serialize());
             if (query.get('stop') === null && Common.getQueryStopId() !== null) {
-                query.append('stop', Common.getQueryStopId());
+                query.append('stop', String(Common.getQueryStopId()));
             }
             if (query.get('stop') !== null && window.location.search !== '?' + query.toString()) {
                 const query_string = '?' + query.toString();
@@ -316,6 +321,7 @@ $(document).ready(
             let count = 0;
             ++update_eta.batch;
             const batch = update_eta.batch;
+            /** @type {Eta[]} */
             const all_etas = [];
 
             function show_eta() {
@@ -324,10 +330,10 @@ $(document).ready(
                     $eta_body.empty()
                         .append(
                             all_etas.slice(0, 3).map(
-                                function (/** Eta */ eta) {
+                                function (eta) {
                                     return $('<tr/>')
                                         .append($('<td/>').text(eta.time === null ? '' : eta.time.hhmmss()))
-                                        .append($('<td/>').text(eta.route_id))
+                                        .append($('<td/>').text(eta.stopRoute.variant.route.number))
                                         .append($('<td/>').text(eta.destination))
                                         .append($('<td/>').text(eta.description))
                                         .append($('<td/>').text(eta.remark));

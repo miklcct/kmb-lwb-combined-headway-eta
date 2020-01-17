@@ -1,7 +1,7 @@
 'use strict';
 
 class Variant {
-    constructor(/** Route */ route, /** String */ id, /** int */ sequence, /** String */ description, /** String */ info) {
+    constructor(/** Route */ route, /** string */ id, /** int */ sequence, /** string */ description, /** ?string */ info) {
         this.route = route;
         this.id = id;
         this.sequence = sequence;

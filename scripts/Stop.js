@@ -1,7 +1,7 @@
 'use strict';
 
 class Stop {
-    constructor(/** int */ id, /** String */ name) {
+    constructor(/** int */ id, /** ?string */ name) {
         this.id = Number(id);
         this.name = name;
     }

@@ -1,7 +1,7 @@
 'use strict';
 
 class Route {
-    constructor(/** String */ company, /** String */ id, /** String */ number, /** String */ origin, /** String */ destination, /** String */ direction, /** int */ number_of_ways) {
+    constructor(/** string */ company, /** string */ id, /** string */ number, /** string */ origin, /** string */ destination, /** string */ direction, /** int */ number_of_ways) {
         this.company = company;
         this.id = id;
         this.number = number;
@@ -17,12 +17,12 @@ Route.prototype.getDescription = function () {
 };
 
 Route.compare = function (/** Route */ a, /** Route */ b) {
-    function compare_route_number(/** String */ a, /** String */ b) {
-        function explode_segments(/** String */ route_id) {
+    function compare_route_number(/** string */ a, /** string */ b) {
+        function explode_segments(/** string */ route_id) {
             let segments = [];
             [...route_id].forEach(
-                function (/** String */ character) {
-                    function is_number(/** String */ x) {
+                function (/** string */ character) {
+                    function is_number(/** string */ x) {
                         return x >= '0' && x <= '9';
                     }
                     if (
