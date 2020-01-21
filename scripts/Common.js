@@ -32,6 +32,7 @@ const Common = {
             );
         };
     },
+
     /**
      * Get the "syscode" query parameter common to all NWFB mobile API calls
      * @return {string}
@@ -47,6 +48,7 @@ const Common = {
         const source_string = timestamp_string.substr(0, timestamp_string.length - 6) + random_string;
         return source_string + md5(source_string + 'firstbusmwymwy');
     },
+
     /**
      * Call the NWFB mobile API
      *
@@ -61,6 +63,7 @@ const Common = {
             , Object.assign(
                 {
                     syscode : Common.getSyscode(),
+                    p : 'iphone',
                     l : 1,
                 }
                 , query
