@@ -306,7 +306,6 @@ $(document).ready(
                 if (stop !== undefined) {
                     save_state();
                     $common_route_list.empty().attr('disabled', 'disabled');
-                    clearTimeout(update_eta.timer);
                     StopRoute.get(
                         stop
                         , update_common_route_list
@@ -316,7 +315,6 @@ $(document).ready(
         );
 
         const update_eta = function () {
-            clearTimeout(update_eta.timer);
             $eta_loading.css('display', 'block');
             let count = 0;
             ++update_eta.batch;
@@ -342,7 +340,6 @@ $(document).ready(
                         );
                     $eta_loading.css('display', 'none');
                     $eta_last_updated.text((new Date).hhmmss());
-                    update_eta.timer = setTimeout(update_eta, 15000);
                 }
             }
 
@@ -367,6 +364,7 @@ $(document).ready(
             show_eta();
         };
         update_eta.batch = 0;
+        update_eta.timer = setInterval(update_eta, 15000);
 
         $common_route_list.change(
             function () {
