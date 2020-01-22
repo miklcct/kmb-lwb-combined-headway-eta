@@ -80,10 +80,15 @@ const Common = {
         return stop_id === null ? null : Number(stop_id);
     },
     /**
-     * Get the selected route IDs in the query string
-     * @return {string[]}
+     * Get the selected route IDs and stop positions in the query string
+     * @return {Array<Array<string|int>>}
      */
     getQuerySelections : function () {
-        return (new URLSearchParams(window.location.search)).getAll('selections');
+        return (new URLSearchParams(window.location.search)).getAll('selections').map(
+            function (/** String */ item) {
+                const segments = item.split(':');
+                return [segments[0], segments.length >= 2 ? Number(segments[1]) : null];
+            }
+        );
     }
 };

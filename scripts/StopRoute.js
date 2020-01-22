@@ -8,7 +8,12 @@ class StopRoute {
     }
 }
 
-StopRoute.get = function (/** Stop */ stop, /** Function */ callback) {
+/**
+ * Get the list of route variants serving a particular stop
+ * @param {Stop} stop
+ * @param {function(Object<string, Array<StopRoute>>)} callback
+ */
+StopRoute.get = function (stop, callback) {
     Common.callApi(
         'getrouteinstop_eta_extra.php'
         , {id : stop.id}
@@ -32,8 +37,10 @@ StopRoute.get = function (/** Stop */ stop, /** Function */ callback) {
                             )
                             , Number(segments[13])
                         );
-                        // FIXME: handle the case when a route passes the same stop twice (e.g. 701 at Fu Cheong Estate)
-                        results[item.variant.route.id] = item;
+                        if (!results.hasOwnProperty(item.variant.route.id)) {
+                            results[item.variant.route.id] = [];
+                        }
+                        results[item.variant.route.id].push(item);
                     }
                 );
             callback(results);

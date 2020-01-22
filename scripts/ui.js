@@ -187,7 +187,25 @@ $(document).ready(
                             ).removeAttr('disabled');
                             const query_stop_id = Common.getQueryStopId();
                             if (query_stop_id !== null) {
-                                $stop_list.val(query_stop_id);
+                                const chosen_route = $route_list.val();
+                                // handle the case when a route passes the same stop multiple times
+                                const selection = Common.getQuerySelections().find(
+                                    function (/** Array */ selection) {
+                                        return selection[0] === chosen_route && selection[1] !== null
+                                    }
+                                );
+                                if (selection !== undefined) {
+                                    $stop_list.first().children().each(
+                                        function () {
+                                            const $this = $(this);
+                                            if ($this.data('sequence') === selection[1]) {
+                                                $this.attr('selected', 'selected');
+                                            }
+                                        }
+                                    )
+                                } else {
+                                    $stop_list.val(query_stop_id);
+                                }
                             }
                             if ($stop_list.val()) {
                                 $stop_list.change();
@@ -204,7 +222,7 @@ $(document).ready(
                 if (!original) {
                     const query_selections = Common.getQuerySelections();
                     if (query_selections.length) {
-                        $route_list.val(query_selections[0]);
+                        $route_list.val(query_selections[0][0]);
                         $route_list.change();
                     }
                 }
@@ -243,49 +261,46 @@ $(document).ready(
         }
         load_route_list.loaded = false;
 
-        const update_common_route_list = function (/** Object */ result) {
+        const update_common_route_list = function (/** Object<string, Array<StopRoute>> */ result) {
             $common_route_list.empty();
             Object.values(result).sort(
-                function (/** StopRoute */ a, /** StopRoute */ b) {
-                    return Route.compare(a.variant.route, b.variant.route);
+                function (/** Array<StopRoute> */ a, /** Array<StopRoute> */ b) {
+                    if (a.length === 0) {
+                        return b.length === 0 ? 0 : -1;
+                    }
+                    if (b.length === 0) {
+                        return 1;
+                    }
+                    return Route.compare(a[0].variant.route, b[0].variant.route);
                 }
             )
                 .forEach(
-                    function (/** StopRoute */ stopRoute) {
-                        const $element = $('<option></option>').attr('value', stopRoute.variant.route.id)
-                            .text(stopRoute.variant.route.getDescription())
-                            .data('model', stopRoute);
-                        const query_selections = Common.getQuerySelections();
-                        if (
-                            query_selections.includes(stopRoute.variant.route.id)
-                            || stopRoute.variant.route.id === $route_list.val()
-                        ) {
-                            $element.attr('selected', 'selected');
-                            const $selected_stop = $('#stop_list option:checked').first();
-                            const selected_sequence = $selected_stop.data('sequence');
-                            const selected_stop = $selected_stop.data('model');
+                    /** Array<StopRoute> */ group => group.forEach(
+                        function (/** StopRoute */ stopRoute) {
+                            const $element = $('<option></option>').attr(
+                                'value'
+                                , stopRoute.variant.route.id
+                                    + (group.length > 1 ? (':' + stopRoute.sequence) : '')
+                            )
+                                .text(stopRoute.variant.route.getDescription() + ' (' + stopRoute.sequence + ')')
+                                .data('model', stopRoute);
+                            const query_selections = Common.getQuerySelections();
                             if (
-                                selected_stop !== undefined && stopRoute.stop.id === selected_stop.id
-                                && selected_sequence !== undefined && stopRoute.sequence !== selected_sequence
-                            ) {
-                                // this is needed to handle a route passing the same stop twice, e.g. 2X or 796X
-                                $.each(
-                                    $stop_list.children()
-                                    , function () {
-                                        const $this = $(this);
-                                        const sequence = $this.data('sequence');
-                                        /** @var {Stop|undefined} */
-                                        const stop = $this.data('model');
-                                        if (sequence === stopRoute.sequence && stop.id === stopRoute.stop.id) {
-                                            $this.attr('selected', 'selected');
-                                            return false;
-                                        }
+                                query_selections.find(
+                                    function (/** Array */ selection) {
+                                        return selection[0] === stopRoute.variant.route.id
+                                        && (selection[1] === null || selection[1] === stopRoute.sequence)
                                     }
-                                );
+                                ) !== undefined
+                                ||
+                                    stopRoute.variant.route.id === $route_list.val()
+                                    && stopRoute.sequence === $('#stop_list option:checked').first().data('sequence')
+                            ) {
+                                $element.attr('selected', 'selected');
                             }
+                            $common_route_list.append($element);
                         }
-                        $common_route_list.append($element);
-                    }
+                    )
                 );
             $common_route_list.removeAttr('disabled').change();
             load_route_list();
@@ -308,10 +323,7 @@ $(document).ready(
                 if (stop !== undefined) {
                     save_state();
                     $common_route_list.empty().attr('disabled', 'disabled');
-                    StopRoute.get(
-                        stop
-                        , update_common_route_list
-                    );
+                    StopRoute.get(stop, update_common_route_list);
                 }
             }
         );

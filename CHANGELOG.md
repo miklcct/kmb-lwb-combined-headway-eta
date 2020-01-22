@@ -1,3 +1,6 @@
+## [1.1.0] (2020-01-23)
+* Handle cases when a route passes the same stop multiple times
+
 ## [1.0.2] (2020-01-17)
 * update API endpoint and proxy server endpoint
 
