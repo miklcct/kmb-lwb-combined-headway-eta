@@ -58,7 +58,7 @@ $(document).ready(
 
         $route_list.change(
             function () {
-                const route = $('#route_list option:selected').first().data('model');
+                const route = $('#route_list option:checked').first().data('model');
                 if (route !== undefined) {
                     $route.val(route.number);
                     if (route.number_of_ways === 2) {
@@ -149,7 +149,7 @@ $(document).ready(
 
         $switch_direction.click(
             function () {
-                const selected_route = $('#route_list option:selected').first().data('model');
+                const selected_route = $('#route_list option:checked').first().data('model');
                 if (selected_route !== undefined) {
                     $.each(
                         $route_list.children()
@@ -167,7 +167,7 @@ $(document).ready(
 
         $variant_list.change(
             function () {
-                const variant = $('#variant_list option:selected').first().data('model');
+                const variant = $('#variant_list option:checked').first().data('model');
 
                 if (variant !== undefined) {
                     $stop_list.empty().attr('disabled', 'disabled');
@@ -261,9 +261,9 @@ $(document).ready(
                             || stopRoute.variant.route.id === $route_list.val()
                         ) {
                             $element.attr('selected', 'selected');
-                            const $selected_stop = $('#stop_list option:selected').first();
+                            const $selected_stop = $('#stop_list option:checked').first();
                             const selected_sequence = $selected_stop.data('sequence');
-                            const selected_stop = $selected_stop.data('stop');
+                            const selected_stop = $selected_stop.data('model');
                             if (
                                 selected_stop !== undefined && stopRoute.stop.id === selected_stop.id
                                 && selected_sequence !== undefined && stopRoute.sequence !== selected_sequence
@@ -274,7 +274,9 @@ $(document).ready(
                                     , function () {
                                         const $this = $(this);
                                         const sequence = $this.data('sequence');
-                                        if (stopRoute.stop.id === stop.id && sequence === stopRoute.sequence) {
+                                        /** @var {Stop|undefined} */
+                                        const stop = $this.data('model');
+                                        if (sequence === stopRoute.sequence && stop.id === stopRoute.stop.id) {
                                             $this.attr('selected', 'selected');
                                             return false;
                                         }
@@ -302,7 +304,7 @@ $(document).ready(
 
         $stop_list.change(
             function () {
-                const stop = $('#stop_list option:selected').first().data('model');
+                const stop = $('#stop_list option:checked').first().data('model');
                 if (stop !== undefined) {
                     save_state();
                     $common_route_list.empty().attr('disabled', 'disabled');
@@ -346,7 +348,7 @@ $(document).ready(
                 }
             }
 
-            $('#common_route_list option:selected').each(
+            $('#common_route_list option:checked').each(
                 function () {
                     const model = $(this).data('model');
                     if (model !== undefined) {

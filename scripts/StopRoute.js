@@ -32,6 +32,7 @@ StopRoute.get = function (/** Stop */ stop, /** Function */ callback) {
                             )
                             , Number(segments[13])
                         );
+                        // FIXME: handle the case when a route passes the same stop twice (e.g. 701 at Fu Cheong Estate)
                         results[item.variant.route.id] = item;
                     }
                 );

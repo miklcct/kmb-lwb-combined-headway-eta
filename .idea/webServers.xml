@@ -2,8 +2,8 @@
 <project version="4">
   <component name="WebServers">
     <option name="servers">
-      <webServer id="a5b4db0e-bc1e-42ad-b5b6-17937a42fb55" name="miklcct.com" url="https://miklcct.com">
-        <fileTransfer host="miklcct.com" port="22" privateKey="$USER_HOME$/.ssh/id_rsa" rootFolder="/var/www/miklcct.com/public_html" accessType="SFTP" keyPair="true">
+      <webServer id="1427ae80-2d43-41b6-a4ad-f7361dc8739d" name="miklcct.com" url="http://miklcct.com">
+        <fileTransfer host="miklcct.com" port="22" privateKey="$USER_HOME$/.ssh/id_rsa" rootFolder="/var/www/miklcct.com" accessType="SFTP" keyPair="true">
           <advancedOptions>
             <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
           </advancedOptions>
