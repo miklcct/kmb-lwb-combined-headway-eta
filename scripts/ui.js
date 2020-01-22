@@ -294,7 +294,10 @@ $(document).ready(
                                 ) !== undefined
                                 ||
                                     stopRoute.variant.route.id === $route_list.val()
-                                    && stopRoute.sequence === $('#stop_list option:checked').first().data('sequence')
+                                    && (
+                                        stopRoute.variant.id !== $variant_list.val()
+                                        || stopRoute.sequence === $('#stop_list option:checked').first().data('sequence')
+                                    )
                             ) {
                                 $element.attr('selected', 'selected');
                             }
