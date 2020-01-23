@@ -314,6 +314,21 @@ $(document).ready(
             if (query.get('stop') === null && Common.getQueryStopId() !== null) {
                 query.append('stop', String(Common.getQueryStopId()));
             }
+            const route_numbers = $('#common_route_list option:checked')
+                .map(
+                    function () {
+                        /** @var {StopRoute} */
+                        const stopRoute = $(this).data('model');
+                        return stopRoute.variant.route.number;
+                    }
+                )
+                .get();
+            /** @var {Stop|undefined} */
+            const selected_stop = $('#stop_list option:checked').first().data('model');
+            const at_stop_name = selected_stop !== undefined ? ' @ ' + selected_stop.name : '';
+            document.title = (route_numbers.length ? route_numbers.join(', ') : 'Citybus & NWFB')
+                + at_stop_name
+                + ' combined ETA';
             if (query.get('stop') !== null && window.location.search !== '?' + query.toString()) {
                 const query_string = '?' + query.toString();
                 window.history.pushState(query_string, undefined, query_string);
