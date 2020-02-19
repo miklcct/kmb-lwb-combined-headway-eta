@@ -1,6 +1,6 @@
-## [1.1.1] (2020-02-19)
-* update API endpoint
-* add API colouring
+## [1.2.0] (2020-02-19)
+* use new ETA API
+* add ETA colouring
 
 ## [1.1.0] (2020-01-23)
 * Handle cases when a route passes the same stop multiple times
