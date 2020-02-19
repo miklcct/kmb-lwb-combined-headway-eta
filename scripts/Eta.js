@@ -63,7 +63,7 @@ Eta.get = function (stopRoute, callback) {
                                 , Number(segments[13])
                                 // TODO: congestion handling
                                 , [
-                                    segments[25].split('|')[0] ? '' : segments[23]
+                                    !['', '*'].includes(segments[25].split('|')[0]) ? '' : segments[23]
                                     , segments[25].split('|')[0]
                                     , segments[25].split('|')[1]
                                 ].filter(s => !['', '*', '**', undefined].includes(s)).join(', ')
