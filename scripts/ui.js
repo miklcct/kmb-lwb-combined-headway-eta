@@ -54,7 +54,7 @@ $(document).ready(
 
         $('#failure').css('display', 'none');
 
-        $eta_loading.css('display', 'none');
+        $eta_loading.css('visibility', 'hidden');
 
         $route_list.change(
             function () {
@@ -348,7 +348,7 @@ $(document).ready(
         );
 
         const update_eta = function () {
-            $eta_loading.css('display', 'block');
+            $eta_loading.css('visibility', 'visible');
             let count = 0;
             ++update_eta.batch;
             const batch = update_eta.batch;
@@ -370,7 +370,7 @@ $(document).ready(
                                 }
                             )
                         );
-                    $eta_loading.css('display', 'none');
+                    $eta_loading.css('visibility', 'hidden');
                     $eta_last_updated.text((new Date).hhmmss());
                 }
             }
