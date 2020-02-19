@@ -54,3 +54,9 @@ of the desired combination is shown directly without selecting again.
 The proxy URL is defined in `scripts/Common.js`.
 The address provided in the repository is a private proxy server which can only be used to 
 query the NWFB mobile API.
+
+## Acknowledgement
+This project is possible only when given the knowledge of how the mobile API works,
+which is studied as
+[a final year project by HKU CS student Wong San Yu](https://i.cs.hku.hk/fyp/2018/report/final_report/Wong%20San%20Yu_12307104_assignsubmission_file_/final-report-revised.pdf),
+with a working Android implementation [BusETA](https://github.com/alvinhkh/buseta) by AlvinHKH.

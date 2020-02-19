@@ -26,7 +26,7 @@ const Common = {
                     }
                 ).map(
                     function (line) {
-                        return line.split('||');
+                        return line.split('||').map(s => s.replace(/^\|+|\|+$/g, ''));
                     }
                 )
             );
@@ -63,8 +63,9 @@ const Common = {
             , Object.assign(
                 {
                     syscode : Common.getSyscode(),
-                    p : 'iphone',
+                    p : 'android',
                     l : 1,
+                    ui_v2 : 'Y',
                 }
                 , query
             )

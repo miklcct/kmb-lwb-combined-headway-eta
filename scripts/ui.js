@@ -195,8 +195,9 @@ $(document).ready(
                                     }
                                 );
                                 if (selection !== undefined) {
-                                    $stop_list.first().children().each(
-                                        function () {
+                                    $.each(
+                                        $stop_list.first().children()
+                                        , function () {
                                             const $this = $(this);
                                             if ($this.data('sequence') === selection[1]) {
                                                 $this.attr('selected', 'selected');
@@ -361,11 +362,10 @@ $(document).ready(
                         .append(
                             all_etas.slice(0, 3).map(
                                 function (eta) {
-                                    return $('<tr/>')
+                                    return $('<tr/>').css('color', eta.colour)
                                         .append($('<td/>').text(eta.time === null ? '' : eta.time.hhmmss()))
                                         .append($('<td/>').text(eta.stopRoute.variant.route.number))
                                         .append($('<td/>').text(eta.destination))
-                                        .append($('<td/>').text(eta.description))
                                         .append($('<td/>').text(eta.remark));
                                 }
                             )
