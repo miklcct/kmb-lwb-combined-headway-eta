@@ -338,11 +338,15 @@ $(document).ready(
 
         $stop_list.change(
             function () {
+                /** @var {Stop|undefined} */
                 const stop = $('#stop_list option:checked').first().data('model');
                 if (stop !== undefined) {
                     save_state();
-                    $common_route_list.empty().attr('disabled', 'disabled');
-                    StopRoute.get(stop, update_common_route_list);
+                    if ($common_route_list.data('stop_id') !== stop.id) {
+                        $common_route_list.empty().attr('disabled', 'disabled');
+                        StopRoute.get(stop, update_common_route_list);
+                        $common_route_list.data('stop_id', stop.id);
+                    }
                 }
             }
         );
@@ -413,6 +417,7 @@ $(document).ready(
                     new Stop(stop_id, null)
                     , update_common_route_list
                 );
+                $common_route_list.data('stop_id', stop_id);
             } else {
                 load_route_list();
             }
