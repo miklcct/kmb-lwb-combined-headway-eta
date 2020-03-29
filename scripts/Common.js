@@ -49,6 +49,14 @@ const Common = {
         return source_string + md5(source_string + 'firstbusmwymwy');
     },
 
+    getSyscode5 : function () {
+        return '15854612224137f8e48d633e7aa12016b89af696f2b0e26597133';
+    },
+
+    getAppid : function () {
+        return 'fc-5eb1he4ia-b6';
+    },
+
     /**
      * Call the NWFB mobile API
      *
@@ -62,7 +70,9 @@ const Common = {
             Common.PROXY_URL + Common.BASE_URL + file
             , Object.assign(
                 {
-                    syscode : Common.getSyscode(),
+                    //syscode : Common.getSyscode(),
+                    syscode5 : Common.getSyscode5(),
+                    appid : Common.getAppid(),
                     p : 'android',
                     l : 1,
                     ui_v2 : 'Y',
