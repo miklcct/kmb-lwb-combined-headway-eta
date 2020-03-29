@@ -33,22 +33,6 @@ const Common = {
         };
     },
 
-    /**
-     * Get the "syscode" query parameter common to all NWFB mobile API calls
-     * @return {string}
-     */
-    getSyscode : function () {
-        const timestamp = Math.round(Date.now() / 1000);
-        const timestamp_string = String(timestamp);
-        const random = Math.floor(Math.random() * 1000);
-        let random_string = String(random);
-        while (random_string.length < 4) {
-            random_string = '0' + random_string;
-        }
-        const source_string = timestamp_string.substr(0, timestamp_string.length - 6) + random_string;
-        return source_string + md5(source_string + 'firstbusmwymwy');
-    },
-
     getSyscode5 : function () {
         return '15854612224137f8e48d633e7aa12016b89af696f2b0e26597133';
     },
@@ -70,7 +54,6 @@ const Common = {
             Common.PROXY_URL + Common.BASE_URL + file
             , Object.assign(
                 {
-                    //syscode : Common.getSyscode(),
                     syscode5 : Common.getSyscode5(),
                     appid : Common.getAppid(),
                     p : 'android',
