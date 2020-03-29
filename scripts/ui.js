@@ -430,6 +430,9 @@ $(document).ready(
         function init() {
 
             const stop_id = Common.getQueryStopId();
+            if (Common.getQueryOneDeparture()) {
+                $one_departure.attr('checked', 'checked');
+            }
             if (stop_id !== null) {
                 StopRoute.get(
                     new Stop(stop_id, null)
