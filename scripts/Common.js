@@ -2,6 +2,7 @@
 
 const Common = {
     PROXY_URL : 'https://miklcct.com/proxy/',
+    SECRET_URL : 'https://miklcct.com/NwfbSecret.json',
     BASE_URL : 'https://mobile02.nwstbus.com.hk/api6/',
 
     /**
@@ -33,14 +34,6 @@ const Common = {
         };
     },
 
-    getSyscode5 : function () {
-        return '15854612224137f8e48d633e7aa12016b89af696f2b0e26597133';
-    },
-
-    getAppid : function () {
-        return 'fc-5eb1he4ia-b6';
-    },
-
     /**
      * Call the NWFB mobile API
      *
@@ -50,20 +43,32 @@ const Common = {
      * @param {function(string)=} preprocess If specified, preprocess the returned string before tokenising it
      */
     callApi : function (file, query, callback, preprocess) {
-        $.get(
-            Common.PROXY_URL + Common.BASE_URL + file
-            , Object.assign(
-                {
-                    syscode5 : Common.getSyscode5(),
-                    appid : Common.getAppid(),
-                    p : 'android',
-                    l : 1,
-                    ui_v2 : 'Y',
+        if (Common.secret === null) {
+            $.get(
+                Common.SECRET_URL
+                , {}
+                , function (json) {
+                    Common.secret = json;
+                    Common.callApi(file, query, callback, preprocess);
                 }
-                , query
             )
-            , Common.getCallbackForMobileApi(callback, preprocess)
-        );
+        } else {
+            $.get(
+                Common.PROXY_URL + Common.BASE_URL + file
+                , Object.assign(
+                    Object.assign(
+                        {
+                            p : 'android',
+                            l : 1,
+                            ui_v2 : 'Y',
+                        }
+                        , Common.secret
+                    )
+                    , query
+                )
+                , Common.getCallbackForMobileApi(callback, preprocess)
+            );
+        }
     },
     /**
      * Get the stop ID in the query string
@@ -84,5 +89,7 @@ const Common = {
                 return [segments[0], segments.length >= 2 ? Number(segments[1]) : null];
             }
         );
-    }
+    },
+
+    secret : null,
 };
