@@ -347,13 +347,14 @@ $(document).ready(
                         $common_route_list.empty().attr('disabled', 'disabled');
                         StopRoute.get(stop, update_common_route_list);
                         $common_route_list.data('stop_id', stop.id);
-                    }
-                    /** @var {Route|undefined} */
-                    const selected_route = $('#route_list option:checked').first().data('model');
-                    if (selected_route !== undefined) {
-                        $common_route_list.children("option[value='" + selected_route.id + "']")
-                            .attr('selected', 'selected');
-                        $common_route_list.change();
+                    } else {
+                        /** @var {Route|undefined} */
+                        const selected_route = $('#route_list option:checked').first().data('model');
+                        if (selected_route !== undefined) {
+                            $common_route_list.children("option[value='" + selected_route.id + "']")
+                                .attr('selected', 'selected');
+                            $common_route_list.change();
+                        }
                     }
                 }
             }
