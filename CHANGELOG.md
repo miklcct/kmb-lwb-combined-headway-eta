@@ -1,3 +1,6 @@
+## [1.2.1] (2020-03-29)
+* use syscode5 when making the API requests
+
 ## [1.2.0] (2020-02-19)
 * use new ETA API
 * add ETA colouring
