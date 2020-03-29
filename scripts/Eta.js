@@ -7,15 +7,17 @@ class Eta {
      * @param {!StopRoute} stopRoute The stop-route where the ETA was queried
      * @param {!Date} time The ETA time
      * @param {string} destination The destination of the departure
+     * @param {string} rdv The RDV (e.g. 14-GRP-1) of the ETA entry
      * @param {int} distance The distance (in metres) of the bus from the stop
      * @param {string} remark The remark of the ETA (e.g. KMB/NWFB, Scheduled)
      * @param {string} colour The colour of the ETA entry
      */
-    constructor(stopRoute, time, destination, distance, remark, colour) {
+    constructor(stopRoute, time, destination, rdv, distance, remark, colour) {
         this.stopRoute = stopRoute;
         this.time = time;
         this.distance = distance;
         this.destination = destination;
+        this.rdv = rdv;
         this.remark = remark;
         this.colour = colour;
     }
@@ -60,6 +62,7 @@ Eta.get = function (stopRoute, callback) {
                                 stopRoute
                                 , new Date(segments[19].split('|')[4])
                                 , segments[26].split('|')[8]
+                                , segments[26].split('|')[2]
                                 , Number(segments[13])
                                 // TODO: congestion handling
                                 , [

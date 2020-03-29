@@ -51,6 +51,7 @@ $(document).ready(
         const $eta_loading = $('#eta_loading');
         const $eta_last_updated = $('#eta_last_updated');
         const $variant_list = $('#variant_list');
+        const $one_departure = $('#one_departure');
 
         $('#failure').css('display', 'none');
 
@@ -362,18 +363,27 @@ $(document).ready(
             function show_eta() {
                 if (count === 0) {
                     all_etas.sort(Eta.compare);
-                    $eta_body.empty()
-                        .append(
-                            all_etas.slice(0, 3).map(
-                                function (eta) {
-                                    return $('<tr/>').css('color', eta.colour)
-                                        .append($('<td/>').text(eta.time === null ? '' : eta.time.hhmmss()))
-                                        .append($('<td/>').text(eta.stopRoute.variant.route.number))
-                                        .append($('<td/>').text(eta.destination))
-                                        .append($('<td/>').text(eta.remark));
+                    const get_eta_row = function (eta) {
+                        return $('<tr/>').css('color', eta.colour)
+                            .append($('<td/>').text(eta.time === null ? '' : eta.time.hhmmss()))
+                            .append($('<td/>').text(eta.stopRoute.variant.route.number))
+                            .append($('<td/>').text(eta.destination))
+                            .append($('<td/>').text(eta.remark));
+                    };
+                    $eta_body.empty();
+                    if (Common.getQueryOneDeparture()) {
+                        const shown_variants = [];
+                        all_etas.forEach(
+                            function (eta) {
+                                if (!shown_variants.includes(eta.rdv)) {
+                                    $eta_body.append(get_eta_row(eta));
+                                    shown_variants.push(eta.rdv);
                                 }
-                            )
-                        );
+                            }
+                        )
+                    } else {
+                        $eta_body.append(all_etas.slice(0, 3).map(get_eta_row));
+                    }
                     $eta_loading.css('visibility', 'hidden');
                     $eta_last_updated.text((new Date).hhmmss());
                 }
@@ -402,12 +412,12 @@ $(document).ready(
         update_eta.batch = 0;
         update_eta.timer = setInterval(update_eta, 15000);
 
-        $common_route_list.change(
-            function () {
-                save_state();
-                update_eta();
-            }
-        );
+        const update = function () {
+            save_state();
+            update_eta();
+        };
+        $common_route_list.change(update);
+        $one_departure.change(update);
 
         function init() {
 

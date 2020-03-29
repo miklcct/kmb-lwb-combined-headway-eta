@@ -91,5 +91,13 @@ const Common = {
         );
     },
 
+    /**
+     * Get if "one departure" mode is selected
+     * @return {boolean}
+     */
+    getQueryOneDeparture : function () {
+        return Boolean((new URLSearchParams(window.location.search)).get('one_departure'));
+    },
+
     secret : null,
 };
