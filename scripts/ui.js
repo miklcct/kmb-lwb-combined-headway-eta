@@ -378,7 +378,7 @@ $(document).ready(
                     all_etas.sort(Eta.compare);
                     const get_eta_row = function (eta) {
                         return $('<tr/>').css('color', eta.colour)
-                            .append($('<td/>').text(eta.time === null ? '' : eta.time.hhmmss()))
+                            .append($('<td/>').text(eta.time === null ? '' : eta.time.hhmmss()).css('font-weight', eta.realTime ? 'bold' : null))
                             .append($('<td/>').text(eta.stopRoute.variant.route.number))
                             .append($('<td/>').text(eta.rdv))
                             .append($('<td/>').text(eta.destination))

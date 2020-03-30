@@ -11,8 +11,9 @@ class Eta {
      * @param {int} distance The distance (in metres) of the bus from the stop
      * @param {string} remark The remark of the ETA (e.g. KMB/NWFB, Scheduled)
      * @param {string} colour The colour of the ETA entry
+     * @param {boolean} realTime If the ETA is real-time
      */
-    constructor(stopRoute, time, destination, rdv, distance, remark, colour) {
+    constructor(stopRoute, time, destination, rdv, distance, remark, colour, realTime) {
         this.stopRoute = stopRoute;
         this.time = time;
         this.distance = distance;
@@ -20,6 +21,7 @@ class Eta {
         this.rdv = rdv;
         this.remark = remark;
         this.colour = colour;
+        this.realTime = realTime;
     }
 }
 
@@ -65,13 +67,13 @@ Eta.get = function (stopRoute, callback) {
                                 , segments[26].split('|')[8]
                                 , segments[26].split('|')[2]
                                 , Number(segments[13])
-                                // TODO: congestion handling
                                 , [
                                     !['', '*'].includes(segments[25].split('|')[0]) ? '' : segments[23]
                                     , segments[25].split('|')[0]
                                     , segments[25].split('|')[1]
                                 ].filter(s => !['', '*', '**', undefined].includes(s)).join(', ')
                                 , congestion_colour !== '#000000' ? congestion_colour : segments[20]
+                                , segments[22] === 'Y'
                             )
                         );
                     }
