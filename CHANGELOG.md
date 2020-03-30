@@ -1,3 +1,6 @@
+## [1.3.1] (2020-03-30)
+* show RDV, stop IDs, and stand IDs in the UI
+
 ## [1.3.0] (2020-03-29)
 * add an option to show only the first departure of each variant
   (useful to determine if to wait for an express bus)
