@@ -1,3 +1,6 @@
+## [1.3.2] (2020-03-30)
+* show real-time ETA in bold, and congested departures in colour
+
 ## [1.3.1] (2020-03-30)
 * show RDV, stop IDs, and stand IDs in the UI
 
