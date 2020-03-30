@@ -19,3 +19,11 @@ table {
 select {
     width: 100%;
 }
+
+#eta {
+    text-align: center;
+}
+
+.rdv {
+    font-size: 0.7em;
+}
