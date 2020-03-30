@@ -81,7 +81,7 @@ $(document).ready(
                                 .forEach(
                                     function (/** Variant */ variant) {
                                         const $option = $('<option/>').attr('value', variant.id)
-                                            .text(variant.sequence + ' ' + variant.description)
+                                            .text(variant.sequence + ' ' + variant.description + ' (' + variant.id + ')')
                                             .data('model', variant);
                                         $.each(
                                             $common_route_list.children()
@@ -180,7 +180,7 @@ $(document).ready(
                                 stops.map(
                                     function (/** Stop */ stop, /** int */ index) {
                                         return $('<option></option>').attr('value', stop.id)
-                                            .text(index + ' ' + stop.name)
+                                            .text(index + ' ' + stop.name + ' (' + stop.id + stop.stand +  ')')
                                             .data('sequence', index)
                                             .data('model', stop);
                                     }
@@ -284,7 +284,12 @@ $(document).ready(
                                 , stopRoute.variant.route.id
                                     + (group.length > 1 ? (':' + stopRoute.sequence) : '')
                             )
-                                .text(stopRoute.variant.route.getDescription() + ' (' + stopRoute.sequence + ')')
+                                .text(
+                                    stopRoute.variant.route.getDescription()
+                                    + ' ('
+                                    + stopRoute.stop.stand
+                                    + ')'
+                                )
                                 .data('model', stopRoute);
                             const query_selections = Common.getQuerySelections();
                             if (
@@ -375,6 +380,7 @@ $(document).ready(
                         return $('<tr/>').css('color', eta.colour)
                             .append($('<td/>').text(eta.time === null ? '' : eta.time.hhmmss()))
                             .append($('<td/>').text(eta.stopRoute.variant.route.number))
+                            .append($('<td/>').text(eta.rdv))
                             .append($('<td/>').text(eta.destination))
                             .append($('<td/>').text(eta.remark));
                     };

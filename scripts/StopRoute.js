@@ -27,7 +27,7 @@ StopRoute.get = function (stop, callback) {
                 .forEach(
                     function (/** Array */ segments) {
                         const item = new StopRoute(
-                            stop
+                            new Stop(stop.id, stop.name, segments[5].match(/[a-zA-Z]/).pop())
                             , new Variant(
                                 new Route(segments[0], segments[6], segments[1], segments[9], segments[2], segments[12], Number(segments[4]))
                                 , segments[14]
