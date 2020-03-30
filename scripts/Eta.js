@@ -57,6 +57,7 @@ Eta.get = function (stopRoute, callback) {
             data.forEach(
                 function (segments) {
                     if (segments.length >= 27) {
+                        const congestion_colour = segments[26].split('|')[0];
                         etas.push(
                             new Eta(
                                 stopRoute
@@ -70,7 +71,7 @@ Eta.get = function (stopRoute, callback) {
                                     , segments[25].split('|')[0]
                                     , segments[25].split('|')[1]
                                 ].filter(s => !['', '*', '**', undefined].includes(s)).join(', ')
-                                , segments[20]
+                                , congestion_colour !== '#000000' ? congestion_colour : segments[20]
                             )
                         );
                     }
