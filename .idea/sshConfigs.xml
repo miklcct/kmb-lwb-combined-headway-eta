@@ -2,7 +2,7 @@
 <project version="4">
   <component name="SshConfigs">
     <configs>
-      <sshConfig host="miklcct.com" id="5e4337bd-3525-4109-b776-5446371ee9b1" keyPath="$USER_HOME$/.ssh/id_rsa" port="22" customName="miklcct.com" nameFormat="CUSTOM" />
+      <sshConfig host="miklcct.com" id="5e4337bd-3525-4109-b776-5446371ee9b1" keyPath="$USER_HOME$/.ssh/id_rsa" port="22" customName="miklcct.com" nameFormat="CUSTOM" username="michael" />
     </configs>
   </component>
 </project>
