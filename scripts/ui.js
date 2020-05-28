@@ -52,6 +52,7 @@ $(document).ready(
         const $eta_last_updated = $('#eta_last_updated');
         const $variant_list = $('#variant_list');
         const $one_departure = $('#one_departure');
+        const $dark_mode = $('#dark_mode');
 
         $('#failure').css('display', 'none');
 
@@ -435,7 +436,23 @@ $(document).ready(
         $common_route_list.change(update);
         $one_departure.change(update);
 
+        $dark_mode.change(
+            function () {
+                const dark_mode = $dark_mode.prop('checked');
+                Cookies.set('dark_mode', dark_mode ? '1' : '');
+                if (dark_mode) {
+                    $('html').addClass('dark');
+                } else {
+                    $('html').removeClass('dark');
+                }
+            }
+        )
+
         function init() {
+
+            if (Cookies.get('dark_mode')) {
+                $dark_mode.prop('checked', true).change();
+            }
 
             const stop_id = Common.getQueryStopId();
             if (Common.getQueryOneDeparture()) {

@@ -6,6 +6,7 @@
         <link rel="stylesheet" href="style.css" />
         <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.4.1.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.12.0/js/md5.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/js-cookie@rc/dist/js.cookie.min.js"></script>        <title>Citybus &amp; NWFB combined ETA</title>
         <script src="scripts/Common.js"></script>
         <script src="scripts/Route.js"></script>
         <script src="scripts/Stop.js"></script>
@@ -13,7 +14,6 @@
         <script src="scripts/Variant.js"></script>
         <script src="scripts/Eta.js"></script>
         <script src="scripts/ui.js"></script>
-        <title>Citybus &amp; NWFB combined ETA</title>
     </head>
     <body>
         <table id="eta">
@@ -45,6 +45,9 @@
                 <label>Route serving the stop selected: <select multiple="multiple" id="common_route_list" name="selections" disabled="disabled"/></label>
             </p>
         </form>
+        <p>
+            <label><input type="checkbox" id="dark_mode" name="dark_mode"/>Dark mode</label>
+        </p>
         <p>
             © Michael Tsang 2020, released under <a href="https://opensource.org/licenses/AGPL-3.0">AGPL 3.0 Licence</a>.<br/>
             <a href="https://github.com/miklcct/ctb-nwfb-combined-headway-eta">Source available on Github.</a>

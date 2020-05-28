@@ -7,5 +7,7 @@
     <orderEntry type="library" name="md5" level="application" />
     <orderEntry type="library" name="sha256" level="application" />
     <orderEntry type="library" name="index" level="application" />
+    <orderEntry type="library" name="blueimp-md5" level="application" />
+    <orderEntry type="library" name="js-cookie" level="application" />
   </component>
 </module>

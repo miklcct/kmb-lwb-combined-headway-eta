@@ -12,6 +12,11 @@ html {
     color: black;
 }
 
+html.dark {
+    background-color: black;
+    color: #e0e0e0;
+}
+
 table {
     width: 100%;
 }
