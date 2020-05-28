@@ -12,9 +12,11 @@ html {
     color: black;
 }
 
-html.dark {
-    background-color: black;
-    color: #e0e0e0;
+@media (prefers-color-scheme: dark) {
+    html {
+        background-color: black;
+        color: #e0e0e0;
+    }
 }
 
 table {
