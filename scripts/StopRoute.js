@@ -27,11 +27,13 @@ StopRoute.get = function (stop, callback, update_count) {
             /** @var object<string, StopRoute> */
             const results = {};
             let remaining_routes = json.data.length;
-            update_count(remaining_routes);
+            if (update_count !== undefined) {
+                update_count(remaining_routes);
+            }
             const postprocess = function () {
                 if (stop.name === null) {
                     stop.name = Object.values(results)[0][0].stop.name;
-                    StopRoute.get(stop, callback);
+                    StopRoute.get(stop, callback, update_count);
                 } else {
                     callback(results);
                 }
@@ -83,7 +85,9 @@ StopRoute.get = function (stop, callback, update_count) {
                                                                     --remaining_bounds;
                                                                     if (remaining_bounds === 0) {
                                                                         --remaining_routes;
-                                                                        update_count(remaining_routes);
+                                                                        if (update_count !== undefined) {
+                                                                            update_count(remaining_routes);
+                                                                        }
                                                                         if (remaining_routes === 0) {
                                                                             postprocess();
                                                                         }
