@@ -1,14 +1,9 @@
 'use strict';
 
 class Route {
-    constructor(/** string */ company, /** string */ id, /** string */ number, /** string */ origin, /** string */ destination, /** string */ direction, /** int */ number_of_ways) {
-        this.company = company;
-        this.id = id;
+    constructor(/** string */ number, /** int */ bound) {
         this.number = number;
-        this.origin = origin;
-        this.destination = destination;
-        this.direction = direction;
-        this.number_of_ways = number_of_ways;
+        this.bound = bound;
     }
 }
 
@@ -69,19 +64,27 @@ Route.compare = function (/** Route */ a, /** Route */ b) {
         : compare_route_number(a.number, b.number)
 };
 
-Route.get = function (/** Function */ callback) {
+Route.getBounds = function (/** string */ route, /** Function */ callback) {
     Common.callApi(
-        'getroutelist2.php'
-        , {}
-        , function (/** Array */ data) {
-            const routes = {};
-            data.forEach(
-                function (/** Array */ segments) {
-                    const route = new Route(segments[0], segments[7], segments[1], segments[4], segments[5], segments[9], Number(segments[3]));
-                    routes[route.id] = route;
-                }
+        {
+            action : 'getroutebound',
+            route : route
+        }
+        /**
+         * @param {array<object>} json.data
+         */
+        , function (json) {
+            callback(
+                json.data.map(
+                    /**
+                     *
+                     * @param {string} item.ROUTE
+                     * @param {string} item.BOUND
+                     * @param {string} item.SERVICE_TYPE
+                     */
+                    item => item.BOUND
+                ).filter((value, index, array) => array.indexOf(value) === index)
             );
-            callback(routes);
         }
     );
 };

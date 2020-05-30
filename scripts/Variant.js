@@ -5,17 +5,17 @@ class Variant {
      * Create a route variant
      *
      * @param {!Route} route The route which the variant belongs to
-     * @param {string} id The variant ID (RDV), e.g. 788-MAF-1
-     * @param {int} sequence The number of the variant
+     * @param {int} serviceType A number identifying the particular variant
+     * @param {string} origin
+     * @param {string} destination
      * @param {string} description The description of the variant, e.g. "Normal routeing"
-     * @param {?string} info The internal code to be used to get stop list
      */
-    constructor(route, id, sequence, description, info) {
+    constructor(route, serviceType, origin, destination, description) {
         this.route = route;
-        this.id = id;
-        this.sequence = sequence;
+        this.serviceType = serviceType;
+        this.origin = origin;
+        this.destination = destination;
         this.description = description;
-        this.info = info;
     }
 }
 
@@ -23,22 +23,38 @@ class Variant {
  * Get the list of variants from a route
  *
  * @param {Route} route
- * @param {function(!Object<string, !Variant>)} callback
+ * @param {function(array<!Variant>)} callback
  */
 Variant.get = function (route, callback) {
     Common.callApi(
-        'getvariantlist.php'
-        , {id : route.id}
-        , function (data) {
-            const variants = {};
-            data.forEach(
-                function (segments) {
-                    const variant = new Variant(route, segments[2], Number(segments[0]), segments[3], segments[4]);
-                    variants[variant.id] = variant;
-                }
-            );
-            callback(variants);
+        {
+            action : 'getSpecialRoute',
+            route : route.number,
+            bound : route.bound,
         }
-    )
+        /**
+         *
+         * @param {object} json
+         * @param {object} json.data
+         * @param {int} json.data.CountSpecal
+         * @param {array<object>>} json.data.routes
+         * @param {boolean} json.result
+         */
+        , function (json) {
+            callback(
+                json.data.routes.map(
+                    /**
+                     * @param {object} item
+                     * @param {string} item.ServiceType
+                     * @param {string} item.Origin_ENG
+                     * @param {string} item.Destination_ENG
+                     * @param {string} item.Desc_ENG
+                     * @returns {Variant}
+                     */
+                    item => new Variant(route, Number(item.ServiceType), item.Origin_ENG, item.Destination_ENG, item.Desc_ENG)
+                )
+            );
+        }
+    );
 };
 

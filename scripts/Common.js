@@ -4,6 +4,7 @@ const Common = {
     PROXY_URL : 'https://miklcct.com/proxy/',
     SECRET_URL : 'https://miklcct.com/NwfbSecret.json',
     BASE_URL : 'https://mobile02.nwstbus.com.hk/api6/',
+    API_ENDPOINT : 'http://search.kmb.hk/KMBWebSite/Function/FunctionRequest.ashx',
 
     /**
      * Get a callback for AJAX to call the NWFB mobile API and process through handler
@@ -35,41 +36,15 @@ const Common = {
     },
 
     /**
-     * Call the NWFB mobile API
+     * Call the KMB API
      *
-     * @param {string} file The file name of the API endpoint to be called, the directory is added automatically
      * @param {Object<string, string>} query The query string parameters, except the common "syscode" and "l"
-     * @param {function(!Array<!Array<string>>)} callback The handler for tokenised data
-     * @param {function(string)=} preprocess If specified, preprocess the returned string before tokenising it
+     * @param {function(object)} callback The handler for the returned JSON
      */
-    callApi : function (file, query, callback, preprocess) {
-        if (Common.secret === null) {
-            $.get(
-                Common.SECRET_URL
-                , {}
-                , function (json) {
-                    Common.secret = json;
-                    Common.callApi(file, query, callback, preprocess);
-                }
-            )
-        } else {
-            $.get(
-                Common.PROXY_URL + Common.BASE_URL + file
-                , Object.assign(
-                    Object.assign(
-                        {
-                            p : 'android',
-                            l : 1,
-                            ui_v2 : 'Y',
-                        }
-                        , Common.secret
-                    )
-                    , query
-                )
-                , Common.getCallbackForMobileApi(callback, preprocess)
-            );
-        }
+    callApi : function (query, callback) {
+        $.post(Common.API_ENDPOINT + '?' + $.param(query), null, callback);
     },
+
     /**
      * Get the stop ID in the query string
      * @return {?int}

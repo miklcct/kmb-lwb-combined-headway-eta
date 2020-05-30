@@ -43,8 +43,8 @@ $(document).ready(
     function () {
         const $common_route_list = $('#common_route_list');
         const $route = $('#route');
+        const $bound = $('#bound');
         const $route_submit = $('#route_submit');
-        const $route_list = $('#route_list');
         const $switch_direction = $('#switch_direction');
         const $stop_list = $('#stop_list');
         const $eta_body = $('#eta tbody');
@@ -57,7 +57,7 @@ $(document).ready(
 
         $eta_loading.css('visibility', 'hidden');
 
-        $route_list.change(
+        false && $route_list.change(
             function () {
                 const route = $('#route_list option:checked').first().data('model');
                 if (route !== undefined) {
@@ -107,62 +107,64 @@ $(document).ready(
             function () {
                 const input = $route.val().toUpperCase();
                 $route.val(input);
-                const found = [];
-                $.each(
-                    $route_list.children()
-                    , function () {
-                        const route = $(this).data('model');
-                        if (route !== undefined && input === route.number) {
-                            found.push(route);
+                $variant_list.attr('disabled', 'disabled');
+                Route.getBounds(
+                    input
+                    /**
+                     * @param {array<int>} bounds
+                     */
+                    , function (bounds) {
+                        if (!bounds.includes(Number($bound.val()))) {
+                            $bound.val(bounds[0])
                         }
+                        if (bounds.length === 1) {
+                            $switch_direction.attr('disabled', 'disabled')
+                        } else {
+                            $switch_direction.removeAttr('disabled');
+                        }
+
+                        Variant.get(
+                            new Route(input, Number($bound.val()))
+                            , function (/** array<!Variant> */ variants) {
+                                $variant_list.empty().append($('<option/>'));
+                                variants
+                                    .sort(
+                                        (/** !Variant */ a, /** !Variant */ b) => a.serviceType - b.serviceType
+                                    )
+                                    .forEach(
+                                        function (/** Variant */ variant) {
+                                            const $option = $('<option/>').attr('value', variant.serviceType)
+                                                .text(
+                                                    variant.serviceType + ' ' + variant.origin + ' → ' + variant.destination
+                                                    + (variant.description === '' ? '' : ' (' + variant.description + ')')
+                                                )
+                                                .data('model', variant);
+                                            $.each(
+                                                $common_route_list.children()
+                                                , function () {
+                                                    const model = $(this).data('model');
+                                                    if (false && model !== undefined && model.variant.id === variant.id) {
+                                                        $option.attr('selected', 'selected');
+                                                    }
+                                                }
+                                            );
+                                            $variant_list.append($option);
+                                        }
+                                    );
+                                $variant_list.removeAttr('disabled');
+                                $variant_list.change();
+                            }
+                        );
                     }
                 );
-                if (found.length) {
-                    let changed = false;
-                    found.forEach(
-                        function (/** Route */ route) {
-                            $.each(
-                                $common_route_list.children()
-                                , function () {
-                                    const model = $(this).data('model');
-                                    if (model !== undefined && model.variant.route.id === route.id) {
-                                        $route_list.val(route.id);
-                                        changed = true;
-                                        return false;
-                                    }
-                                }
-                            );
-                            if (changed) {
-                                return false;
-                            }
-                        }
-                    );
-                    if (!changed) {
-                        $route_list.val(found[0].id);
-                    }
-                    $route_list.change();
-                } else {
-                    alert('Invalid route');
-                }
                 return false;
             }
         );
 
         $switch_direction.click(
             function () {
-                const selected_route = $('#route_list option:checked').first().data('model');
-                if (selected_route !== undefined) {
-                    $.each(
-                        $route_list.children()
-                        , function () {
-                            const route = $(this).data('model');
-                            if (route !== undefined && selected_route.number === route.number && selected_route.direction !== route.direction) {
-                                $route_list.val(route.id).change();
-                                return false;
-                            }
-                        }
-                    );
-                }
+                $bound.val(3 - Number($bound.val())); // switch between 1 and 2
+                $route_submit.click();
             }
         );
 
@@ -219,6 +221,8 @@ $(document).ready(
         );
 
         function load_route_list() {
+            return;
+
             function choose_route() {
                 const original = $route_list.val();
                 if (!original) {

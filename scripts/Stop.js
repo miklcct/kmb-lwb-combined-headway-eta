@@ -1,25 +1,36 @@
 'use strict';
 
 class Stop {
-    constructor(/** int */ id, /** ?string */ name, /** ?string */ stand) {
-        this.id = Number(id);
+    constructor(/** string */ id, /** ?string */ name, /** string */ direction) {
+        this.id = id;
         this.name = name;
-        this.stand = stand;
+        this.direction = direction;
     }
 }
 
 Stop.get = function (/** Variant */ variant, /** Function */ callback) {
     Common.callApi(
-        'ppstoplist.php'
-        , {info : '0|*|' + variant.info.replace(/\*\*\*/g, '||')}
-        , function (/** Array */ data) {
-            const stops = [];
-            data.forEach(
-                function (/** Array */ segments) {
-                    stops[Number(segments[2])] = new Stop(segments[3], segments[7], segments[4].match(/[a-zA-Z]/).pop());
-                }
+        {
+            action : 'getstops',
+            route : variant.route.number,
+            bound : variant.route.bound,
+            serviceType : variant.serviceType
+        }
+        /**
+         * @param {array<object>} json.data.routeStops
+         */
+        , function (json) {
+            callback(
+                json.data.routeStops.map(
+                    /**
+                     * @param {string} item.BSICode
+                     * @param {string} item.EName
+                     * @param {string} item.Direction
+                     * @returns {!Stop}
+                     */
+                    item => new Stop(item.BSICode, item.EName, item.Direction.trim())
+                )
             );
-            callback(stops);
         }
     );
 };

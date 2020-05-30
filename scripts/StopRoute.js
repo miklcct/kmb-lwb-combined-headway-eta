@@ -9,41 +9,21 @@ class StopRoute {
 }
 
 /**
- * Get the list of route variants serving a particular stop
- * @param {Stop} stop
- * @param {function(Object<string, Array<StopRoute>>)} callback
+ * Get the list of routes serving a particular stop
+ * @param {!Stop} stop
+ * @param {function(array<string>)} callback
  */
 StopRoute.get = function (stop, callback) {
     Common.callApi(
-        'getrouteinstop_eta_extra.php'
-        , {id : stop.id}
-        , function (/** Array */ data) {
-            const results = {};
-            data.filter(
-                function (/** Array */ segments) {
-                    return segments.length >= 20;
-                }
-            )
-                .forEach(
-                    function (/** Array */ segments) {
-                        const item = new StopRoute(
-                            new Stop(stop.id, stop.name, segments[5].match(/[a-zA-Z]/).pop())
-                            , new Variant(
-                                new Route(segments[0], segments[6], segments[1], segments[9], segments[2], segments[12], Number(segments[4]))
-                                , segments[14]
-                                , Number(segments[19])
-                                , segments[17]
-                                , null
-                            )
-                            , Number(segments[13])
-                        );
-                        if (!results.hasOwnProperty(item.variant.route.id)) {
-                            results[item.variant.route.id] = [];
-                        }
-                        results[item.variant.route.id].push(item);
-                    }
-                );
-            callback(results);
+        {
+            action : 'getRoutesInStop',
+            bsiCode : stop.id
+        }
+        /**
+         * @param {array<string>} json.data
+         */
+        , function (json) {
+            callback(json.data.map(item => item.trim()));
         }
     );
 };
