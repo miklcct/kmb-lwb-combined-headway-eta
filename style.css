@@ -18,3 +18,7 @@ select {
 #eta {
     text-align: center;
 }
+
+#route_list_loading {
+    display: none;
+}

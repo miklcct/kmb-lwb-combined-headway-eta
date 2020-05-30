@@ -242,6 +242,15 @@ $(document).ready(
             }
         }
 
+        /**
+         *
+         * @param {int} count
+         */
+        function update_route_progress(count) {
+            $('#route_list_loading').css('display', 'block');
+            $('#route_list_count').text(count);
+        }
+
         const update_common_route_list = function (/** Object<string, Array<StopRoute>> */ result) {
             $common_route_list.empty();
             Object.values(result).sort(
@@ -316,6 +325,7 @@ $(document).ready(
                 );
             }
             $common_route_list.removeAttr('disabled').change();
+            $('#route_list_loading').css('display', 'none');
             choose_route();
         };
 
@@ -353,7 +363,7 @@ $(document).ready(
                     save_state();
                     if ($common_route_list.data('stop_id') !== stop.id) {
                         $common_route_list.empty().attr('disabled', 'disabled');
-                        StopRoute.get(stop, update_common_route_list);
+                        StopRoute.get(stop, update_common_route_list, update_route_progress);
                         $common_route_list.data('stop_id', stop.id);
                     } else {
                         /** @var {Route|undefined} */
@@ -462,6 +472,7 @@ $(document).ready(
                 StopRoute.get(
                     new Stop(stop_id, null)
                     , update_common_route_list
+                    , update_route_progress
                 );
                 $common_route_list.data('stop_id', stop_id);
             }

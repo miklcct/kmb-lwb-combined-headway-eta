@@ -12,8 +12,9 @@ class StopRoute {
  * Get the list of route variants serving a particular stop
  * @param {Stop} stop
  * @param {function(Object<string, Array<StopRoute>>)} callback
+ * @param {function(int)|undefined} update_count Specify this to update the progress of how many routes are remaining
  */
-StopRoute.get = function (stop, callback) {
+StopRoute.get = function (stop, callback, update_count) {
     Common.callApi(
         {
             action : 'getRoutesInStop',
@@ -26,6 +27,7 @@ StopRoute.get = function (stop, callback) {
             /** @var object<string, StopRoute> */
             const results = {};
             let remaining_routes = json.data.length;
+            update_count(remaining_routes);
             const postprocess = function () {
                 if (stop.name === null) {
                     stop.name = Object.values(results)[0][0].stop.name;
@@ -81,6 +83,7 @@ StopRoute.get = function (stop, callback) {
                                                                     --remaining_bounds;
                                                                     if (remaining_bounds === 0) {
                                                                         --remaining_routes;
+                                                                        update_count(remaining_routes);
                                                                         if (remaining_routes === 0) {
                                                                             postprocess();
                                                                         }
