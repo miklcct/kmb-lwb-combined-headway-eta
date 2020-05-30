@@ -1,3 +1,6 @@
+## [1.4.3] (2020-05-30)
+* fix real time display
+
 ## [1.4.2] (2020-05-30)
 * add progress display when loading routes serving stop
 

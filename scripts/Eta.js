@@ -66,8 +66,8 @@ Eta.get = function (stopRoute, callback) {
                             {
                                 time : obj.t.substr(0, 5),
                                 remark : obj.t.substr(5),
-                                real_time : obj.eot === 'Y',
-                                distance : obj.dis === undefined ? null : obj.dis
+                                real_time : typeof obj.dis === 'number',
+                                distance : obj.dis === undefined ? null : obj.dis,
                             }
                         )
                     )
@@ -79,6 +79,10 @@ Eta.get = function (stopRoute, callback) {
                             if (time.getTime() - Date.now() < -60 * 60 * 1000 * 2) {
                                 // the time is less than 2 hours past - assume midnight rollover
                                 time.setDate(time.getDate() + 1);
+                            }
+                            if (time.getTime() - Date.now() > 60 * 60 * 1000 * 6) {
+                                // the time is more than 6 hours in the future - assume midnight rollover
+                                time.setDate(time.getDate() - 1);
                             }
                             return new Eta(stopRoute, time, obj.distance, obj.remark, obj.real_time);
                         }

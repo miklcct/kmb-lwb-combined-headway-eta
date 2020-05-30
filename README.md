@@ -26,6 +26,10 @@ serving the stop.
   choosing Wong Tai Sin Station from the stop list now will still load the combination of 61X, 258D, 259D,
   choosing Millennium City from the stop list will load 258D, 259D because 61X do not serve the stop.
   
+  Limitation: if the newly-chosen stop serves the same route in the same direction twice at the exact same pole,
+  e.g. choosing 71S at Kwong Fuk Playground, then choose Tai Po Market Station (TA10-T-1250-0),
+  both stopping of 71S at that same pole will be selected automatically.
+
 ## Installation
 No installation is needed. Clone the repository and open `index.xhtml`.
 It runs fully within the browser.
