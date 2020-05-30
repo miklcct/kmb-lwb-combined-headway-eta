@@ -68,52 +68,6 @@ $(document).ready(
 
         $eta_loading.css('visibility', 'hidden');
 
-        false && $route_list.change(
-            function () {
-                const route = $('#route_list option:checked').first().data('model');
-                if (route !== undefined) {
-                    $route.val(route.number);
-                    if (route.number_of_ways === 2) {
-                        $switch_direction.removeAttr('disabled');
-                    } else {
-                        $switch_direction.attr('disabled', 'disabled');
-                    }
-                    $variant_list.empty().attr('disabled', 'disabled');
-                    Variant.get(
-                        route
-                        , function (/** Object */ variants) {
-                            $variant_list.empty().append($('<option/>'));
-                            Object.values(variants)
-                                .sort(
-                                    function (/** Variant */ a, /** Variant */ b) {
-                                        return a.sequence - b.sequence;
-                                    }
-                                )
-                                .forEach(
-                                    function (/** Variant */ variant) {
-                                        const $option = $('<option/>').attr('value', variant.id)
-                                            .text(variant.sequence + ' ' + variant.description + ' (' + variant.id + ')')
-                                            .data('model', variant);
-                                        $.each(
-                                            $common_route_list.children()
-                                            , function () {
-                                                const model = $(this).data('model');
-                                                if (model !== undefined && model.variant.id === variant.id) {
-                                                    $option.attr('selected', 'selected');
-                                                }
-                                            }
-                                        );
-                                        $variant_list.append($option);
-                                    }
-                                );
-                            $variant_list.removeAttr('disabled');
-                            $variant_list.change();
-                        }
-                    );
-                }
-            }
-        );
-
         $route_submit.click(
             function () {
                 const input = $route.val().toUpperCase();
