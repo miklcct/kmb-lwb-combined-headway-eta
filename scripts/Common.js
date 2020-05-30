@@ -76,3 +76,13 @@ const Common = {
 
     secret : null,
 };
+
+/**
+ * Convert string to title case
+ *
+ * FIXME: this is English only
+ * @returns {string}
+ */
+String.prototype.toTitleCase = function () {
+    return this.toLowerCase().replace(/((^|[^a-z0-9])+)(.)/g,  (match, p1, p2, p3) => p1 + p3.toUpperCase());
+}

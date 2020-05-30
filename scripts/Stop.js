@@ -9,7 +9,15 @@ class Stop {
     }
 }
 
-Stop.get = function (/** Variant */ variant, /** Function */ callback) {
+Stop.prototype.getStreet = function () {
+    return this.id.split('-')[0];
+}
+
+Stop.prototype.getDirection = function () {
+    return this.id.split('-')[1];
+}
+
+Stop.get = function (/** Variant */ variant, /** function(array<Stop>) */ callback) {
     Common.callApi(
         {
             action : 'getstops',
@@ -30,7 +38,7 @@ Stop.get = function (/** Variant */ variant, /** Function */ callback) {
                      * @param {string} item.Seq
                      * @returns {!Stop}
                      */
-                    item => new Stop(item.BSICode, item.EName, item.Direction.trim(), Number(item.Seq))
+                    item => new Stop(item.BSICode, item.EName.toTitleCase(), item.Direction.trim(), Number(item.Seq))
                 )
             );
         }

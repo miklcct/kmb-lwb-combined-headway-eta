@@ -11,6 +11,14 @@ Route.prototype.getDescription = function () {
     return this.number + ' ' + this.origin + (this.number_of_ways === 0 ? ' ↺ ' : ' → ') + this.destination;
 };
 
+/**
+ * Get a string in the format "Route-Bound"
+ * @returns {string}
+ */
+Route.prototype.getRouteBound = function () {
+    return this.number + '-' + this.bound;
+}
+
 Route.compare = function (/** Route */ a, /** Route */ b) {
     function compare_route_number(/** string */ a, /** string */ b) {
         function explode_segments(/** string */ route_id) {
@@ -64,7 +72,12 @@ Route.compare = function (/** Route */ a, /** Route */ b) {
         : compare_route_number(a.number, b.number)
 };
 
-Route.getBounds = function (/** string */ route, /** Function */ callback) {
+/**
+ *
+ * @param {string} route
+ * @param {function(int[])} callback
+ */
+Route.getBounds = function (route, callback) {
     Common.callApi(
         {
             action : 'getroutebound',

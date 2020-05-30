@@ -134,10 +134,7 @@ $(document).ready(
                                     .forEach(
                                         function (/** Variant */ variant) {
                                             const $option = $('<option/>').attr('value', variant.serviceType)
-                                                .text(
-                                                    variant.serviceType + ' ' + variant.origin + ' → ' + variant.destination
-                                                    + (variant.description === '' ? '' : ' (' + variant.description + ')')
-                                                )
+                                                .text(variant.serviceType + ' ' + variant.getOriginDestinationString() + (variant.description === '' ? '' : ' (' + variant.description + ')'))
                                                 .data('model', variant);
                                             $.each(
                                                 $common_route_list.children()
@@ -269,54 +266,51 @@ $(document).ready(
         }
         load_route_list.loaded = false;
 
-        const update_common_route_list = function (/** Object<string, Array<StopRoute>> */ result) {
+        const update_common_route_list = function (/** object<string, StopRoute> */ result) {
             $common_route_list.empty();
-            Object.values(result).sort(
-                function (/** Array<StopRoute> */ a, /** Array<StopRoute> */ b) {
-                    if (a.length === 0) {
-                        return b.length === 0 ? 0 : -1;
+            Object
+                .values(result)
+                .sort(
+                    function (/** StopRoute */ a, /** StopRoute */ b) {
+                        return Route.compare(a.variant.route, b.variant.route);
                     }
-                    if (b.length === 0) {
-                        return 1;
-                    }
-                    return Route.compare(a[0].variant.route, b[0].variant.route);
-                }
-            )
+                )
                 .forEach(
-                    /** Array<StopRoute> */ group => group.forEach(
-                        function (/** StopRoute */ stopRoute) {
-                            const $element = $('<option></option>').attr(
-                                'value'
-                                , stopRoute.variant.route.id
-                                    + (group.length > 1 ? (':' + stopRoute.sequence) : '')
+                    function (/** StopRoute */ stopRoute) {
+                        const $element = $('<option></option>').attr(
+                            'value'
+                            , stopRoute.variant.route.number
+                        )
+                            .text(
+                                stopRoute.variant.route.number
+                                + ' '
+                                + stopRoute.variant.getOriginDestinationString()
+                                + ' ('
+                                + stopRoute.stop.id
+                                + ')'
                             )
-                                .text(
-                                    stopRoute.variant.route.getDescription()
-                                    + ' ('
-                                    + stopRoute.stop.stand
-                                    + ')'
+                            .data('model', stopRoute);
+                        const query_selections = Common.getQuerySelections();
+                        if (
+                            false && (
+                            query_selections.find(
+                                function (/** Array */ selection) {
+                                    return selection[0] === stopRoute.variant.route.id
+                                    && (selection[1] === null || selection[1] === stopRoute.sequence)
+                                }
+                            ) !== undefined
+                            ||
+                                stopRoute.variant.route.id === $route_list.val()
+                                && (
+                                    stopRoute.variant.id !== $variant_list.val()
+                                    || stopRoute.sequence === $('#stop_list option:checked').first().data('sequence')
                                 )
-                                .data('model', stopRoute);
-                            const query_selections = Common.getQuerySelections();
-                            if (
-                                query_selections.find(
-                                    function (/** Array */ selection) {
-                                        return selection[0] === stopRoute.variant.route.id
-                                        && (selection[1] === null || selection[1] === stopRoute.sequence)
-                                    }
-                                ) !== undefined
-                                ||
-                                    stopRoute.variant.route.id === $route_list.val()
-                                    && (
-                                        stopRoute.variant.id !== $variant_list.val()
-                                        || stopRoute.sequence === $('#stop_list option:checked').first().data('sequence')
-                                    )
-                            ) {
-                                $element.attr('selected', 'selected');
-                            }
-                            $common_route_list.append($element);
+                            )
+                        ) {
+                            $element.attr('selected', 'selected');
                         }
-                    )
+                        $common_route_list.append($element);
+                    }
                 );
             $common_route_list.removeAttr('disabled').change();
             load_route_list();

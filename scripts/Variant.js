@@ -19,6 +19,10 @@ class Variant {
     }
 }
 
+Variant.prototype.getOriginDestinationString = function () {
+    return this.origin + ' → ' + this.destination;
+}
+
 /**
  * Get the list of variants from a route
  *
@@ -51,7 +55,7 @@ Variant.get = function (route, callback) {
                      * @param {string} item.Desc_ENG
                      * @returns {Variant}
                      */
-                    item => new Variant(route, Number(item.ServiceType), item.Origin_ENG, item.Destination_ENG, item.Desc_ENG)
+                    item => new Variant(route, Number(item.ServiceType), item.Origin_ENG.toTitleCase(), item.Destination_ENG.toTitleCase(), item.Desc_ENG)
                 )
             );
         }
