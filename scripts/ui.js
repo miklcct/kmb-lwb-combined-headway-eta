@@ -114,6 +114,10 @@ $(document).ready(
                      * @param {array<int>} bounds
                      */
                     , function (bounds) {
+                        if (bounds.length === 0) {
+                            alert('Invalid route');
+                            return;
+                        }
                         if (!bounds.includes(Number($bound.val()))) {
                             $bound.val(bounds[0])
                         }
