@@ -27,7 +27,12 @@ StopRoute.get = function (stop, callback) {
             const results = {};
             let remaining_routes = json.data.length;
             const postprocess = function () {
-                callback(results);
+                if (stop.name === null) {
+                    stop.name = Object.values(results)[0][0].stop.name;
+                    StopRoute.get(stop, callback);
+                } else {
+                    callback(results);
+                }
             };
             json.data.map(item => item.trim())
                 .forEach(
@@ -60,7 +65,7 @@ StopRoute.get = function (stop, callback) {
                                                                             // allow duplicate entries for the same variant but disallow multiple variants
                                                                             if (
                                                                                 !results.hasOwnProperty(variant.route.getRouteBound())
-                                                                                || inner_stop.sequence < results[variant.route.getRouteBound()].sequence
+                                                                                || variant.serviceType < results[variant.route.getRouteBound()][0].variant.serviceType
                                                                             ) {
                                                                                 results[variant.route.getRouteBound()] = [];
                                                                             }

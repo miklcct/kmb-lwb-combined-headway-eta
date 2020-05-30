@@ -18,6 +18,17 @@ Date.prototype.hhmm = function () {
     return pad(this.getHours()) + ':' + pad(this.getMinutes());
 };
 
+Date.prototype.hhmmss = function () {
+    function pad(number) {
+        if (number < 10) {
+            return '0' + number;
+        }
+        return number;
+    }
+
+    return pad(this.getHours()) + ':' + pad(this.getMinutes()) + ':' + pad(this.getSeconds());
+};
+
 (function () {
     $(document).ajaxError(
         function (/** Event */ event, /** XMLHttpRequest */ jqXHR, /** Object */ ajaxSettings) {
@@ -127,8 +138,10 @@ $(document).ready(
                             $switch_direction.removeAttr('disabled');
                         }
 
+                        const model = new Route(input, Number($bound.val()));
+                        $route.first().data('model', model);
                         Variant.get(
-                            new Route(input, Number($bound.val()))
+                            model
                             , function (/** array<!Variant> */ variants) {
                                 $variant_list.empty().append($('<option/>'));
                                 variants
@@ -197,8 +210,14 @@ $(document).ready(
                                     )
                             ).removeAttr('disabled');
                             const query_stop_id = Common.getQueryStopId();
-                            if (false && query_stop_id !== null) {
-                                const chosen_route = $route_list.val();
+                            if (query_stop_id !== null) {
+                                const chosen_route = (
+                                    () => {
+                                        /** @var {Route|undefined} */
+                                        const model = $route.data('model');
+                                        return model !== undefined ? model.getRouteBound() : null
+                                    }
+                                )()
                                 // handle the case when a route passes the same stop multiple times
                                 const selection = Common.getQuerySelections().find(
                                     function (/** Array */ selection) {
@@ -216,7 +235,19 @@ $(document).ready(
                                         }
                                     )
                                 } else {
-                                    $stop_list.val(query_stop_id);
+                                    // loop through the common route list because KMB uses different stop ID for different poles
+                                    $.each(
+                                        $common_route_list.children()
+                                        , function () {
+                                            /** @var {StopRoute} */
+                                            const model = $(this).data('model');
+                                            if (model !== undefined) {
+                                                if (model.variant.route.getRouteBound() === chosen_route) {
+                                                    $stop_list.val(model.stop.id);
+                                                }
+                                            }
+                                        }
+                                    );
                                 }
                             }
                             if ($stop_list.val()) {
@@ -228,52 +259,16 @@ $(document).ready(
             }
         );
 
-        function load_route_list() {
-            return;
-
-            function choose_route() {
-                const original = $route_list.val();
-                if (!original) {
-                    const query_selections = Common.getQuerySelections();
-                    if (query_selections.length) {
-                        $route_list.val(query_selections[0][0]);
-                        $route_list.change();
-                    }
+        function choose_route() {
+            const original = $route.val();
+            if (!original) {
+                const query_selections = Common.getQuerySelections();
+                if (query_selections.length) {
+                    $route.val(query_selections[0][0].split('-')[0]);
+                    $route_submit.click();
                 }
             }
-
-            if (!load_route_list.loaded) {
-                [$route, $route_list, $route_submit, $switch_direction].forEach(
-                    function ($element) {
-                        $element.attr('disabled');
-                    }
-                );
-                $route_list.empty();
-                Route.get(
-                    function (/** Object */ routes) {
-                        let routes_array = Object.values(routes);
-                        $route_list.empty().append($('<option/>')).append(
-                            routes_array.sort(Route.compare).map(
-                                function (/** Route */ route) {
-                                    return $('<option></option>').attr('value', route.id).text(route.getDescription())
-                                        .data('model', route);
-                                }
-                            )
-                        );
-                        [$route, $route_list, $route_submit].forEach(
-                            function ($element) {
-                                $element.removeAttr('disabled');
-                            }
-                        );
-                        load_route_list.loaded = true;
-                        choose_route();
-                    }
-                );
-            } else {
-                choose_route();
-            }
         }
-        load_route_list.loaded = false;
 
         const update_common_route_list = function (/** Object<string, Array<StopRoute>> */ result) {
             $common_route_list.empty();
@@ -327,7 +322,7 @@ $(document).ready(
                     )
                 );
             $common_route_list.removeAttr('disabled').change();
-            load_route_list();
+            choose_route();
         };
 
         function save_state() {
@@ -347,7 +342,7 @@ $(document).ready(
             /** @var {Stop|undefined} */
             const selected_stop = $('#stop_list option:checked').first().data('model');
             const at_stop_name = selected_stop !== undefined ? ' @ ' + selected_stop.name : '';
-            document.title = (route_numbers.length ? route_numbers.join(', ') : 'Citybus & NWFB')
+            document.title = (route_numbers.length ? route_numbers.join(', ') : 'KMB & LWB')
                 + at_stop_name
                 + ' combined ETA';
             if (query.get('stop') !== null && window.location.search !== '?' + query.toString()) {
@@ -368,9 +363,9 @@ $(document).ready(
                         $common_route_list.data('stop_id', stop.id);
                     } else {
                         /** @var {Route|undefined} */
-                        const selected_route = $('#route_list option:checked').first().data('model');
+                        const selected_route = $route.first().data('model');
                         if (selected_route !== undefined) {
-                            $common_route_list.children("option[value='" + selected_route.id + "']")
+                            $common_route_list.children("option[value='" + selected_route.getRouteBound() + "']")
                                 .attr('selected', 'selected');
                             $common_route_list.change();
                         }
@@ -412,7 +407,7 @@ $(document).ready(
                         $eta_body.append(all_etas.slice(0, 3).map(get_eta_row));
                     }
                     $eta_loading.css('visibility', 'hidden');
-                    $eta_last_updated.text((new Date).hhmm());
+                    $eta_last_updated.text((new Date).hhmmss());
                 }
             }
 
@@ -458,8 +453,6 @@ $(document).ready(
                     , update_common_route_list
                 );
                 $common_route_list.data('stop_id', stop_id);
-            } else {
-                load_route_list();
             }
         }
 

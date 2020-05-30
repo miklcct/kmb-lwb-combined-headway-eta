@@ -76,6 +76,10 @@ Eta.get = function (stopRoute, callback) {
                         obj => {
                             const time = new Date();
                             time.setHours(Number(obj.time.split(':')[0]), Number(obj.time.split(':')[1]));
+                            if (time.getTime() - Date.now() < -60 * 60 * 1000 * 2) {
+                                // the time is less than 2 hours past - assume midnight rollover
+                                time.setDate(time.getDate() + 1);
+                            }
                             return new Eta(stopRoute, time, obj.distance, obj.remark, obj.real_time);
                         }
                     )

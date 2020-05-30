@@ -47,11 +47,10 @@ const Common = {
 
     /**
      * Get the stop ID in the query string
-     * @return {?int}
+     * @return {?string}
      */
     getQueryStopId : function () {
-        const stop_id = (new URLSearchParams(window.location.search)).get('stop');
-        return stop_id === null ? null : Number(stop_id);
+        return (new URLSearchParams(window.location.search)).get('stop');
     },
     /**
      * Get the selected route IDs and stop positions in the query string
