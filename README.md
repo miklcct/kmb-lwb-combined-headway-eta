@@ -22,8 +22,8 @@ serving the stop.
   
 * The existing combination is preserved when another stop with the same combination in the same direction is chosen.
 
-  For example, if you have selected routes 61X, 258 and 259D at Beacon Heights,
-  choosing Wong Tai Sin Station from the stop list now will still load the combination of 6, 6A, 6X, 260,
+  For example, if you have selected routes 61X, 258, 259D at Beacon Heights,
+  choosing Wong Tai Sin Station from the stop list now will still load the combination of 61X, 258D, 259D,
   choosing Millennium City from the stop list will load 258D, 259D because 61X do not serve the stop.
   
 ## Installation
