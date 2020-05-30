@@ -243,6 +243,7 @@ $(document).ready(
                             const $element = $('<option></option>').attr(
                                 'value'
                                 , stopRoute.variant.route.getRouteBound()
+                                    + (group.length > 1 ? (':' + stopRoute.sequence) : '')
                             )
                                 .text(
                                     stopRoute.variant.route.number
@@ -253,28 +254,49 @@ $(document).ready(
                                     + ')'
                                 )
                                 .data('model', stopRoute);
-                            const query_selections = Common.getQuerySelections();
-                            if (
-                                query_selections.find(
-                                    function (/** Array */ selection) {
-                                        return selection[0] === stopRoute.variant.route.getRouteBound()
-                                        && (selection[1] === null || selection[1] === stopRoute.sequence)
-                                    }
-                                ) !== undefined
-                                ||
-                                    stopRoute.variant.route.number === $route.val()
-                                    && stopRoute.variant.route.bound === Number($bound.val())
-                                    && (
-                                        stopRoute.variant.serviceType !== Number($variant_list.val())
-                                        || stopRoute.sequence === $('#stop_list option:checked').first().data('sequence')
-                                    )
-                            ) {
-                                $element.attr('selected', 'selected');
-                            }
                             $common_route_list.append($element);
                         }
                     )
                 );
+            const found_exact_matches = {};
+            const query_selections = Common.getQuerySelections();
+            for (let i = 0; i < 2; ++i) {
+                $.each(
+                    $common_route_list.children()
+                    , function () {
+                        const $this = $(this);
+                        /** @var {StopRoute} */
+                        const stopRoute = $this.data('model');
+                        if (stopRoute !== undefined) {
+                            if (
+                                query_selections.find(
+                                    function (/** Array */ selection) {
+                                        return selection[0] === stopRoute.variant.route.getRouteBound()
+                                            && (selection[1] === null || selection[1] === stopRoute.sequence)
+                                            && (
+                                                stopRoute.stop.id === Common.getQueryStopId()
+                                                || (i && !found_exact_matches.hasOwnProperty(stopRoute.variant.route.getRouteBound()))
+                                            )
+                                    }
+                                ) !== undefined
+                                ||
+                                stopRoute.variant.route.number === $route.val()
+                                && stopRoute.variant.route.bound === Number($bound.val())
+                                && stopRoute.stop.id === Common.getQueryStopId()
+                                && (
+                                    stopRoute.variant.serviceType !== Number($variant_list.val())
+                                    || stopRoute.sequence === $('#stop_list option:checked').first().data('sequence')
+                                )
+                            ) {
+                                $this.attr('selected', 'selected');
+                                if (stopRoute.stop.id === Common.getQueryStopId()) {
+                                    found_exact_matches[stopRoute.variant.route.getRouteBound()] = stopRoute;
+                                }
+                            }
+                        }
+                    }
+                );
+            }
             $common_route_list.removeAttr('disabled').change();
             choose_route();
         };
@@ -319,8 +341,27 @@ $(document).ready(
                         /** @var {Route|undefined} */
                         const selected_route = $route.first().data('model');
                         if (selected_route !== undefined) {
-                            $common_route_list.children("option[value='" + selected_route.getRouteBound() + "']")
-                                .attr('selected', 'selected');
+                            let exact_match_found = false;
+                            for (let i = 0; i < 2; ++i) {
+                                $.each(
+                                    $common_route_list.children()
+                                    , function () {
+                                        /** @var {StopRoute|undefined} */
+                                        const model = $(this).data('model');
+                                        if (model !== undefined) {
+                                            const exact_match = model.variant.route.getRouteBound() === selected_route.getRouteBound();
+                                            if (exact_match && (model.stop.id === stop.id || i && !exact_match_found)) {
+                                                $(this).attr('selected', 'selected');
+                                                if (exact_match) {
+                                                    exact_match_found = true;
+                                                }
+                                            }
+                                        }
+                                    }
+                                );
+                            }
+                            // $common_route_list.children("option[value='" + selected_route.getRouteBound() + "']")
+                            //     .attr('selected', 'selected');
                             $common_route_list.change();
                         }
                     }
