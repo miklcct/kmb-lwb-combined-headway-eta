@@ -68,68 +68,86 @@ $(document).ready(
 
         $eta_loading.css('visibility', 'hidden');
 
+        function change_route() {
+            const input = $route.val().toUpperCase();
+            $route.val(input);
+            $switch_direction.attr('disabled', 'disabled');
+            $variant_list.attr('disabled', 'disabled');
+            Route.getBounds(
+                input
+                /**
+                 * @param {array<int>} bounds
+                 */
+                , function (bounds) {
+                    if (bounds.length === 0) {
+                        alert('Invalid route');
+                        return;
+                    }
+                    if (bounds.length !== 1) {
+                        $switch_direction.removeAttr('disabled');
+                    }
+
+                    const model = new Route(input, Number($bound.val()));
+                    $route.first().data('model', model);
+                    Variant.get(
+                        model
+                        , function (/** array<!Variant> */ variants) {
+                            $variant_list.empty().append($('<option/>'));
+                            variants
+                                .sort(
+                                    (/** !Variant */ a, /** !Variant */ b) => a.serviceType - b.serviceType
+                                )
+                                .forEach(
+                                    function (/** Variant */ variant) {
+                                        const $option = $('<option/>').attr('value', variant.serviceType)
+                                            .text(variant.serviceType + ' ' + variant.getOriginDestinationString() + (variant.description === '' ? '' : ' (' + variant.description + ')'))
+                                            .data('model', variant);
+                                        $.each(
+                                            $common_route_list.children()
+                                            , function () {
+                                                /** @var {StopRoute|undefined} */
+                                                const model = $(this).data('model');
+                                                if (
+                                                    model !== undefined
+                                                    && model.variant.route.getRouteBound() === variant.route.getRouteBound()
+                                                    && model.variant.serviceType === variant.serviceType
+                                                ) {
+                                                    $option.attr('selected', 'selected');
+                                                }
+                                            }
+                                        );
+                                        $variant_list.append($option);
+                                    }
+                                );
+                            $variant_list.removeAttr('disabled');
+                            $variant_list.change();
+                        }
+                    );
+                }
+            );
+        }
+
         $route_submit.click(
             function () {
                 const input = $route.val().toUpperCase();
-                $route.val(input);
-                $variant_list.attr('disabled', 'disabled');
-                Route.getBounds(
-                    input
-                    /**
-                     * @param {array<int>} bounds
-                     */
-                    , function (bounds) {
-                        if (bounds.length === 0) {
-                            alert('Invalid route');
-                            return;
-                        }
-                        if (!bounds.includes(Number($bound.val()))) {
-                            $bound.val(bounds[0])
-                        }
-                        if (bounds.length === 1) {
-                            $switch_direction.attr('disabled', 'disabled')
-                        } else {
-                            $switch_direction.removeAttr('disabled');
-                        }
-
-                        const model = new Route(input, Number($bound.val()));
-                        $route.first().data('model', model);
-                        Variant.get(
-                            model
-                            , function (/** array<!Variant> */ variants) {
-                                $variant_list.empty().append($('<option/>'));
-                                variants
-                                    .sort(
-                                        (/** !Variant */ a, /** !Variant */ b) => a.serviceType - b.serviceType
-                                    )
-                                    .forEach(
-                                        function (/** Variant */ variant) {
-                                            const $option = $('<option/>').attr('value', variant.serviceType)
-                                                .text(variant.serviceType + ' ' + variant.getOriginDestinationString() + (variant.description === '' ? '' : ' (' + variant.description + ')'))
-                                                .data('model', variant);
-                                            $.each(
-                                                $common_route_list.children()
-                                                , function () {
-                                                    /** @var {StopRoute|undefined} */
-                                                    const model = $(this).data('model');
-                                                    if (
-                                                        model !== undefined
-                                                        && model.variant.route.getRouteBound() === variant.route.getRouteBound()
-                                                        && model.variant.serviceType === variant.serviceType
-                                                    ) {
-                                                        $option.attr('selected', 'selected');
-                                                    }
-                                                }
-                                            );
-                                            $variant_list.append($option);
-                                        }
-                                    );
-                                $variant_list.removeAttr('disabled');
-                                $variant_list.change();
+                let in_common_route_list = false;
+                $.each(
+                    $common_route_list.children()
+                    , function () {
+                        /** @var {StopRoute|undefined} */
+                        const model = $(this).data('model');
+                        if (model !== undefined) {
+                            if (model.variant.route.number === input) {
+                                in_common_route_list = true;
+                                $bound.val(model.variant.route.bound);
                             }
-                        );
+                        }
                     }
                 );
+                if (!in_common_route_list) {
+                    $bound.val(1);
+                }
+                change_route();
                 return false;
             }
         );
@@ -137,7 +155,7 @@ $(document).ready(
         $switch_direction.click(
             function () {
                 $bound.val(3 - Number($bound.val())); // switch between 1 and 2
-                $route_submit.click();
+                change_route();
             }
         );
 
@@ -360,8 +378,6 @@ $(document).ready(
                                     }
                                 );
                             }
-                            // $common_route_list.children("option[value='" + selected_route.getRouteBound() + "']")
-                            //     .attr('selected', 'selected');
                             $common_route_list.change();
                         }
                     }
