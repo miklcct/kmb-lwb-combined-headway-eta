@@ -377,8 +377,8 @@ $(document).ready(
                                         /** @var {StopRoute|undefined} */
                                         const model = $(this).data('model');
                                         if (model !== undefined) {
-                                            const exact_match = model.variant.route.getRouteBound() === selected_route.getRouteBound();
-                                            if (exact_match && (model.stop.id === stop.id || i && !exact_match_found)) {
+                                            const exact_match = model.stop.id === stop.id;
+                                            if (model.variant.route.getRouteBound() === selected_route.getRouteBound() && (exact_match || i && !exact_match_found)) {
                                                 $(this).attr('selected', 'selected');
                                                 if (exact_match) {
                                                     exact_match_found = true;
