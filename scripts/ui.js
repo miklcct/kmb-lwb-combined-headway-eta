@@ -7,7 +7,7 @@
  * 3. routes which passes the same stop in the same direction twice (e.g. 2X Shau Kei Wan， 796X Tseung Kwan O Industrial Estate)
  */
 
-Date.prototype.hhmmss = function () {
+Date.prototype.hhmm = function () {
     function pad(number) {
         if (number < 10) {
             return '0' + number;
@@ -15,7 +15,7 @@ Date.prototype.hhmmss = function () {
         return number;
     }
 
-    return pad(this.getHours()) + ':' + pad(this.getMinutes()) + ':' + pad(this.getSeconds());
+    return pad(this.getHours()) + ':' + pad(this.getMinutes());
 };
 
 (function () {
@@ -381,13 +381,10 @@ $(document).ready(
                 if (count === 0) {
                     all_etas.sort(Eta.compare);
                     const get_eta_row = function (eta) {
-                        return $('<tr/>').css('color', eta.colour)
-                            .append($('<td/>').text(eta.time === null ? '' : eta.time.hhmmss()).css('font-weight', eta.realTime ? 'bold' : null))
-                            .append(
-                                $('<td/>').text(eta.stopRoute.variant.route.number).append('<br/>')
-                                    .append($('<span/>').text(eta.rdv).addClass('rdv'))
-                            )
-                            .append($('<td/>').text(eta.destination))
+                        return $('<tr/>')
+                            .append($('<td/>').text(eta.time === null ? '' : eta.time.hhmm()).css('font-weight', eta.realTime ? 'bold' : null))
+                            .append($('<td/>').text(eta.stopRoute.variant.route.number))
+                            .append($('<td/>').text(eta.distance))
                             .append($('<td/>').text(eta.remark));
                     };
                     $eta_body.empty();
@@ -395,9 +392,9 @@ $(document).ready(
                         const shown_variants = [];
                         all_etas.forEach(
                             function (eta) {
-                                if (!shown_variants.includes(eta.rdv)) {
+                                if (!shown_variants.includes(eta.stopRoute.variant.route)) {
                                     $eta_body.append(get_eta_row(eta));
-                                    shown_variants.push(eta.rdv);
+                                    shown_variants.push(eta.stopRoute.variant.route);
                                 }
                             }
                         )
@@ -405,7 +402,7 @@ $(document).ready(
                         $eta_body.append(all_etas.slice(0, 3).map(get_eta_row));
                     }
                     $eta_loading.css('visibility', 'hidden');
-                    $eta_last_updated.text((new Date).hhmmss());
+                    $eta_last_updated.text((new Date).hhmm());
                 }
             }
 
