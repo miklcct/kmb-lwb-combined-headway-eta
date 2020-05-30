@@ -5,35 +5,6 @@ const Common = {
     API_ENDPOINT : 'http://search.kmb.hk/KMBWebSite/Function/FunctionRequest.ashx',
 
     /**
-     * Get a callback for AJAX to call the NWFB mobile API and process through handler
-     *
-     * @param {function(!Array<!Array<string>>)} handler The handler for tokenised data
-     * @param {function(string)=} preprocess If specified, preprocess the returned string before tokenising it
-     * @return {function(string)}
-     */
-    getCallbackForMobileApi : function (handler, preprocess) {
-        /**
-         * @return {function(string)}
-         */
-        return function (data) {
-            if (preprocess !== undefined) {
-                data = preprocess(data);
-            }
-            handler(
-                data.split('<br>').filter(
-                    function (line) {
-                        return line !== '';
-                    }
-                ).map(
-                    function (line) {
-                        return line.split('||').map(s => s.replace(/^\|+|\|+$/g, ''));
-                    }
-                )
-            );
-        };
-    },
-
-    /**
      * Call the KMB API
      *
      * @param {Object<string, string>} query The query string parameters, except the common "syscode" and "l"
@@ -81,5 +52,5 @@ const Common = {
  * @returns {string}
  */
 String.prototype.toTitleCase = function () {
-    return this.toLowerCase().replace(/((^|[^a-z0-9])+)(.)/g,  (match, p1, p2, p3) => p1 + p3.toUpperCase());
+    return this.toLowerCase().replace(/((^|[^a-z0-9'])+)(.)/g,  (match, p1, p2, p3) => p1 + p3.toUpperCase());
 }
