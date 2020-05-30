@@ -1,10 +1,11 @@
 'use strict';
 
 class Stop {
-    constructor(/** string */ id, /** ?string */ name, /** string */ direction) {
+    constructor(/** string */ id, /** ?string */ name, /** string */ direction, /** int */ sequence) {
         this.id = id;
         this.name = name;
         this.direction = direction;
+        this.sequence = sequence;
     }
 }
 
@@ -26,9 +27,10 @@ Stop.get = function (/** Variant */ variant, /** Function */ callback) {
                      * @param {string} item.BSICode
                      * @param {string} item.EName
                      * @param {string} item.Direction
+                     * @param {string} item.Seq
                      * @returns {!Stop}
                      */
-                    item => new Stop(item.BSICode, item.EName, item.Direction.trim())
+                    item => new Stop(item.BSICode, item.EName, item.Direction.trim(), Number(item.Seq))
                 )
             );
         }

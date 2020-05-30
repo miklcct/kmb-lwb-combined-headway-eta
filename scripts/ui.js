@@ -179,17 +179,19 @@ $(document).ready(
                         , function (/** Array */ stops) {
                             $stop_list.empty().append($('<option/>'));
                             $stop_list.append(
-                                stops.map(
-                                    function (/** Stop */ stop, /** int */ index) {
-                                        return $('<option></option>').attr('value', stop.id)
-                                            .text(index + ' ' + stop.name + ' (' + stop.id + stop.stand +  ')')
-                                            .data('sequence', index)
-                                            .data('model', stop);
-                                    }
-                                )
+                                stops
+                                    .sort((/** !Stop */ a, /** !Stop */ b) => a.sequence - b.sequence)
+                                    .map(
+                                        function (/** Stop */ stop) {
+                                            return $('<option></option>').attr('value', stop.id)
+                                                .text(stop.sequence + ' ' + stop.name + ' (' + stop.id + ')')
+                                                .data('sequence', stop.sequence)
+                                                .data('model', stop);
+                                        }
+                                    )
                             ).removeAttr('disabled');
                             const query_stop_id = Common.getQueryStopId();
-                            if (query_stop_id !== null) {
+                            if (false && query_stop_id !== null) {
                                 const chosen_route = $route_list.val();
                                 // handle the case when a route passes the same stop multiple times
                                 const selection = Common.getQuerySelections().find(
