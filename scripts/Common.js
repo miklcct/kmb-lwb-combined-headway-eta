@@ -42,7 +42,7 @@ const Common = {
      * @param {function(object)} callback The handler for the returned JSON
      */
     callApi : function (query, callback) {
-        $.post(Common.API_ENDPOINT + '?' + $.param(query), null, callback);
+        $.get(Common.API_ENDPOINT, query, callback);
     },
 
     /**
