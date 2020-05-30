@@ -143,8 +143,13 @@ $(document).ready(
                                             $.each(
                                                 $common_route_list.children()
                                                 , function () {
+                                                    /** @var {StopRoute|undefined} */
                                                     const model = $(this).data('model');
-                                                    if (false && model !== undefined && model.variant.id === variant.id) {
+                                                    if (
+                                                        model !== undefined
+                                                        && model.variant.route.getRouteBound() === variant.route.getRouteBound()
+                                                        && model.variant.serviceType === variant.serviceType
+                                                    ) {
                                                         $option.attr('selected', 'selected');
                                                     }
                                                 }
@@ -270,51 +275,56 @@ $(document).ready(
         }
         load_route_list.loaded = false;
 
-        const update_common_route_list = function (/** object<string, StopRoute> */ result) {
+        const update_common_route_list = function (/** Object<string, Array<StopRoute>> */ result) {
             $common_route_list.empty();
-            Object
-                .values(result)
-                .sort(
-                    function (/** StopRoute */ a, /** StopRoute */ b) {
-                        return Route.compare(a.variant.route, b.variant.route);
+            Object.values(result).sort(
+                function (/** Array<StopRoute> */ a, /** Array<StopRoute> */ b) {
+                    if (a.length === 0) {
+                        return b.length === 0 ? 0 : -1;
                     }
-                )
+                    if (b.length === 0) {
+                        return 1;
+                    }
+                    return Route.compare(a[0].variant.route, b[0].variant.route);
+                }
+            )
                 .forEach(
-                    function (/** StopRoute */ stopRoute) {
-                        const $element = $('<option></option>').attr(
-                            'value'
-                            , stopRoute.variant.route.number
-                        )
-                            .text(
-                                stopRoute.variant.route.number
-                                + ' '
-                                + stopRoute.variant.getOriginDestinationString()
-                                + ' ('
-                                + stopRoute.stop.id
-                                + ')'
+                    /** Array<StopRoute> */ group => group.forEach(
+                        function (/** StopRoute */ stopRoute) {
+                            const $element = $('<option></option>').attr(
+                                'value'
+                                , stopRoute.variant.route.getRouteBound()
                             )
-                            .data('model', stopRoute);
-                        const query_selections = Common.getQuerySelections();
-                        if (
-                            false && (
-                            query_selections.find(
-                                function (/** Array */ selection) {
-                                    return selection[0] === stopRoute.variant.route.id
-                                    && (selection[1] === null || selection[1] === stopRoute.sequence)
-                                }
-                            ) !== undefined
-                            ||
-                                stopRoute.variant.route.id === $route_list.val()
-                                && (
-                                    stopRoute.variant.id !== $variant_list.val()
-                                    || stopRoute.sequence === $('#stop_list option:checked').first().data('sequence')
+                                .text(
+                                    stopRoute.variant.route.number
+                                    + ' '
+                                    + stopRoute.variant.getOriginDestinationString()
+                                    + ' ('
+                                    + stopRoute.stop.id
+                                    + ')'
                                 )
-                            )
-                        ) {
-                            $element.attr('selected', 'selected');
+                                .data('model', stopRoute);
+                            const query_selections = Common.getQuerySelections();
+                            if (
+                                query_selections.find(
+                                    function (/** Array */ selection) {
+                                        return selection[0] === stopRoute.variant.route.getRouteBound()
+                                        && (selection[1] === null || selection[1] === stopRoute.sequence)
+                                    }
+                                ) !== undefined
+                                ||
+                                    stopRoute.variant.route.number === $route.val()
+                                    && stopRoute.variant.route.bound === Number($bound.val())
+                                    && (
+                                        stopRoute.variant.serviceType !== Number($variant_list.val())
+                                        || stopRoute.sequence === $('#stop_list option:checked').first().data('sequence')
+                                    )
+                            ) {
+                                $element.attr('selected', 'selected');
+                            }
+                            $common_route_list.append($element);
                         }
-                        $common_route_list.append($element);
-                    }
+                    )
                 );
             $common_route_list.removeAttr('disabled').change();
             load_route_list();
