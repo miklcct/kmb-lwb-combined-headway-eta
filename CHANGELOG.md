@@ -1,3 +1,6 @@
+## [1.4.0] (2020-05-30)
+* introduce dark mode
+
 ## [1.3.2] (2020-03-30)
 * show real-time ETA in bold, and congested departures in colour
 
