@@ -2,8 +2,6 @@
 
 const Common = {
     PROXY_URL : 'https://miklcct.com/proxy/',
-    SECRET_URL : 'https://miklcct.com/NwfbSecret.json',
-    BASE_URL : 'https://mobile02.nwstbus.com.hk/api6/',
     API_ENDPOINT : 'http://search.kmb.hk/KMBWebSite/Function/FunctionRequest.ashx',
 
     /**

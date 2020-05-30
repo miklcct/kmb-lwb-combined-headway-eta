@@ -7,10 +7,6 @@ class Route {
     }
 }
 
-Route.prototype.getDescription = function () {
-    return this.number + ' ' + this.origin + (this.number_of_ways === 0 ? ' ↺ ' : ' → ') + this.destination;
-};
-
 /**
  * Get a string in the format "Route-Bound"
  * @returns {string}
@@ -68,7 +64,7 @@ Route.compare = function (/** Route */ a, /** Route */ b) {
     }
 
     return a.number === b.number
-        ? a.direction > b.direction ? -1 : a.direction < b.direction ? 1 : 0
+        ? a.bound > b.bound ? -1 : a.bound < b.bound ? 1 : 0
         : compare_route_number(a.number, b.number)
 };
 
