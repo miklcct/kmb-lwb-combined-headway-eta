@@ -1,3 +1,6 @@
+## [1.4.4] (2020-05-31)
+* do not use proxy to query KMB website when not served over HTTPS
+
 ## [1.4.3] (2020-05-30)
 * fix real time display
 
