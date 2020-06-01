@@ -56,6 +56,7 @@ $(document).ready(
         const $route = $('#route');
         const $bound = $('#bound');
         const $route_submit = $('#route_submit');
+        const $direction = $('#direction');
         const $switch_direction = $('#switch_direction');
         const $stop_list = $('#stop_list');
         const $eta_body = $('#eta tbody');
@@ -89,36 +90,39 @@ $(document).ready(
 
                     const model = new Route(input, Number($bound.val()));
                     $route.first().data('model', model);
+                    $direction.text('');
                     Variant.get(
                         model
                         , function (/** array<!Variant> */ variants) {
                             $variant_list.empty().append($('<option/>'));
-                            variants
-                                .sort(
-                                    (/** !Variant */ a, /** !Variant */ b) => a.serviceType - b.serviceType
-                                )
-                                .forEach(
-                                    function (/** Variant */ variant) {
-                                        const $option = $('<option/>').attr('value', variant.serviceType)
-                                            .text(variant.serviceType + ' ' + variant.getOriginDestinationString() + (variant.description === '' ? '' : ' (' + variant.description + ')'))
-                                            .data('model', variant);
-                                        $.each(
-                                            $common_route_list.children()
-                                            , function () {
-                                                /** @var {StopRoute|undefined} */
-                                                const model = $(this).data('model');
-                                                if (
-                                                    model !== undefined
-                                                    && model.variant.route.getRouteBound() === variant.route.getRouteBound()
-                                                    && model.variant.serviceType === variant.serviceType
-                                                ) {
-                                                    $option.attr('selected', 'selected');
-                                                }
+                            const sorted = variants.sort(
+                                (/** !Variant */ a, /** !Variant */ b) => a.serviceType - b.serviceType
+                            );
+                            if (sorted.length > 0) {
+                                $direction.text(sorted[0].getOriginDestinationString());
+                            }
+                            sorted.forEach(
+                                function (/** Variant */ variant) {
+                                    const $option = $('<option/>').attr('value', variant.serviceType)
+                                        .text(variant.serviceType + ' ' + variant.getOriginDestinationString() + (variant.description === '' ? '' : ' (' + variant.description + ')'))
+                                        .data('model', variant);
+                                    $.each(
+                                        $common_route_list.children()
+                                        , function () {
+                                            /** @var {StopRoute|undefined} */
+                                            const model = $(this).data('model');
+                                            if (
+                                                model !== undefined
+                                                && model.variant.route.getRouteBound() === variant.route.getRouteBound()
+                                                && model.variant.serviceType === variant.serviceType
+                                            ) {
+                                                $option.attr('selected', 'selected');
                                             }
-                                        );
-                                        $variant_list.append($option);
-                                    }
-                                );
+                                        }
+                                    );
+                                    $variant_list.append($option);
+                                }
+                            );
                             $variant_list.removeAttr('disabled');
                             $variant_list.change();
                         }

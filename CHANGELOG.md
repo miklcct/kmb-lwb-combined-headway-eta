@@ -1,3 +1,6 @@
+## [1.5.0] (2020-06-??)
+* add direction display
+
 ## [1.4.4] (2020-05-31)
 * do not use proxy to query KMB website when not served over HTTPS
 
