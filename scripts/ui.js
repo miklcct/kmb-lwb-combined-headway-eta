@@ -321,6 +321,16 @@ $(document).ready(
             if (query.get('stop') === null && Common.getQueryStopId() !== null) {
                 query.append('stop', String(Common.getQueryStopId()));
             }
+            // merge existing query apart from those three
+            const original_query = new URLSearchParams(window.location.search);
+            original_query.forEach(
+                function (value, key) {
+                    if (!['stop', 'selections', 'one_departure'].includes(key)) {
+                        query.append(key, value);
+                    }
+                }
+            );
+
             const route_numbers = $('#common_route_list option:checked')
                 .map(
                     function () {
@@ -333,13 +343,38 @@ $(document).ready(
             /** @var {Stop|undefined} */
             const selected_stop = $('#stop_list option:checked').first().data('model');
             const at_stop_name = selected_stop !== undefined ? ' @ ' + selected_stop.name : '';
-            document.title = (route_numbers.length ? route_numbers.join(', ') : 'Citybus & NWFB')
-                + at_stop_name
-                + ' combined ETA';
-            if (query.get('stop') !== null && window.location.search !== '?' + query.toString()) {
+            /**
+             * @param {URLSearchParams} a
+             * @param {URLSearchParams} b
+             */
+            const compare = function (a, b) {
+                // only handle stop, selections and one_departure
+                if (a.get('stop') === b.get('stop') && a.get('one_departure') === b.get('one_departure')) {
+                    // check selections are equal
+                    const a_selections = a.getAll('selections');
+                    const b_selections = b.getAll('selections');
+                    if (a_selections.length === b_selections.length) {
+                        // check elements are equal
+                        for (let i = 0; i < a_selections.length; ++i) {
+                            if (a_selections[i] !== b_selections[i]) {
+                                return false;
+                            }
+                        }
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    return false;
+                }
+            }
+            if (query.get('stop') !== null && !compare(original_query, query)) {
                 const query_string = '?' + query.toString();
                 window.history.pushState(query_string, undefined, query_string);
             }
+            document.title = (route_numbers.length ? route_numbers.join(', ') : 'Citybus & NWFB')
+                + at_stop_name
+                + ' combined ETA';
         }
 
         $stop_list.change(
@@ -436,7 +471,6 @@ $(document).ready(
         $one_departure.change(update);
 
         function init() {
-
             const stop_id = Common.getQueryStopId();
             if (Common.getQueryOneDeparture()) {
                 $one_departure.attr('checked', 'checked');
