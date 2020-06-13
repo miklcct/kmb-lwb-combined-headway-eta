@@ -471,6 +471,12 @@ $(document).ready(
         $one_departure.change(update);
 
         function init() {
+            $route.val('');
+            $route_list.val('');
+            $variant_list.empty();
+            $stop_list.empty();
+            $common_route_list.empty();
+
             const stop_id = Common.getQueryStopId();
             if (Common.getQueryOneDeparture()) {
                 $one_departure.attr('checked', 'checked');
