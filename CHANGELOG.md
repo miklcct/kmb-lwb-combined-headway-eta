@@ -1,5 +1,6 @@
-## [1.5.0] (2020-06-??)
+## [1.5.0] (2020-06-13)
 * add direction display
+* fix history handling
 
 ## [1.4.4] (2020-05-31)
 * do not use proxy to query KMB website when not served over HTTPS
