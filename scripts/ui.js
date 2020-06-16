@@ -134,22 +134,35 @@ $(document).ready(
         $route_submit.click(
             function () {
                 const input = $route.val().toUpperCase();
-                let in_common_route_list = false;
-                $.each(
-                    $common_route_list.children()
-                    , function () {
-                        /** @var {StopRoute|undefined} */
-                        const model = $(this).data('model');
-                        if (model !== undefined) {
-                            if (model.variant.route.number === input) {
-                                in_common_route_list = true;
-                                $bound.val(model.variant.route.bound);
-                            }
+                let bound = null;
+                Common.getQuerySelections().forEach(
+                    (item) => {
+                        const segments = item[0].split('-');
+                        if (segments[0].toUpperCase() === input) {
+                            bound = segments[1];
                         }
                     }
                 );
-                if (!in_common_route_list) {
-                    $bound.val(1);
+                if (bound === null) {
+                    let in_common_route_list = false;
+                    $.each(
+                        $common_route_list.children()
+                        , function () {
+                            /** @var {StopRoute|undefined} */
+                            const model = $(this).data('model');
+                            if (model !== undefined) {
+                                if (model.variant.route.number === input) {
+                                    in_common_route_list = true;
+                                    $bound.val(model.variant.route.bound);
+                                }
+                            }
+                        }
+                    );
+                    if (!in_common_route_list) {
+                        $bound.val(1);
+                    }
+                } else {
+                    $bound.val(bound);
                 }
                 change_route();
                 return false;
