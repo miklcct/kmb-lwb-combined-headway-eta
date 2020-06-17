@@ -37,24 +37,26 @@ Eta.compare = function (a, b) {
  * @param {function(Array<Eta>)} callback
  */
 Eta.get = function (stopRoute, callback) {
-    $.get(
-        Common.PROXY_URL + 'http://etav3.kmb.hk/'
+    /** @type {!Date} */
+    const current_date = new Date;
+    /** @type {string} */
+    const date_string = current_date.getUTCFullYear() + "-" + ("00" + (current_date.getUTCMonth() + 1)).slice(-2) + "-" + ("00" + current_date.getUTCDate()).slice(-2) + " " + ("00" + current_date.getUTCHours()).slice(-2) + ":" + ("00" + current_date.getUTCMinutes()).slice(-2) + ":" + ("00" + current_date.getUTCSeconds()).slice(-2) + "." + ("00" + current_date.getUTCMilliseconds()).slice(-2) + ".";
+    /** @type {string} */
+    const sep = "--31" + date_string + "13--";
+    var token = "EA" + btoa(stopRoute.variant.route.number + sep + stopRoute.variant.route.bound + sep + stopRoute.variant.serviceType + sep + stopRoute.stop.id.trim().replace(/-/gi, '') + sep + stopRoute.sequence + sep + (new Date).getTime());
+    $.post(
+        (location.protocol === 'https:' ? Common.PROXY_URL : '') + Common.API_ENDPOINT + "?action=get_ETA&lang=0"
         , {
-            action : 'geteta',
-            route : stopRoute.variant.route.number,
-            bound : stopRoute.variant.route.bound,
-            stop_seq : stopRoute.sequence,
-            serviceType : stopRoute.variant.serviceType,
-            lang : 'en',
-            updated : '',
+            token : token,
+            t : date_string,
         }
         /**
          *
-         * @param {object[]} json.response
+         * @param {object[]} json.data.response
          */
         , function (json) {
             callback(
-                json.response
+                json.data.response
                     .map(
                         /**
                          *
