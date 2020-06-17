@@ -1,3 +1,6 @@
+## [1.5.1] (2020-06-17)
+* use KMB website API to get ETA
+
 ## [1.5.0] (2020-06-13)
 * add direction display
 * fix history handling
