@@ -378,7 +378,9 @@ $(document).ready(
                 const query_string = '?' + query.toString();
                 window.history.pushState(query_string, undefined, query_string);
             }
-            update_title(route_numbers, selected_stop !== undefined ? selected_stop.name : null);
+            update_title(
+                route_numbers
+                , selected_stop !== undefined ? selected_stop.name : (localStorage[Common.getQueryStopId()] ?? null));
         }
 
         $stop_list.change(
@@ -490,12 +492,12 @@ $(document).ready(
                 Common.getQuerySelections().map(
                     selection => selection[0].split('-')[0]
                 )
-                , null
+                , localStorage[Common.getQueryStopId()] ?? null
             )
 
             if (stop_id !== null) {
                 StopRoute.get(
-                    new Stop(stop_id, null)
+                    new Stop(stop_id, localStorage[stop_id] ?? null, null)
                     , update_common_route_list
                 );
                 $common_route_list.data('stop_id', stop_id);

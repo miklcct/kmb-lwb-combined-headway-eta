@@ -2,9 +2,13 @@
 
 class Stop {
     constructor(/** int */ id, /** ?string */ name, /** ?string */ stand) {
-        this.id = Number(id);
+        id = Number(id);
+        this.id = id;
         this.name = name;
         this.stand = stand;
+        if (name !== null) {
+            localStorage[id] = name;
+        }
     }
 }
 
