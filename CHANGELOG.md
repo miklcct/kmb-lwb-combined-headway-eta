@@ -1,3 +1,6 @@
+## [1.5.2] (2020-06-23)
+* set page title during initialisation
+
 ## [1.5.1] (2020-06-17)
 * use KMB website API to get ETA
 
