@@ -321,6 +321,7 @@ $(document).ready(
             document.title = (route_numbers.length ? route_numbers.join(', ') : 'Citybus & NWFB')
                 + at_stop_name
                 + ' combined ETA';
+            history.replaceState(window.location.search, undefined, window.location.search);
         }
 
         function save_state() {
