@@ -346,6 +346,13 @@ $(document).ready(
             choose_route();
         };
 
+        function update_title(/** !Array<string> */ route_numbers, /** ?string */ stop_name) {
+            const at_stop_name = stop_name !== null ? ' @ ' + stop_name : '';
+            document.title = (route_numbers.length ? route_numbers.join(', ') : 'KMB & LWB')
+                + at_stop_name
+                + ' combined ETA';
+        }
+
         function save_state() {
             const query = new URLSearchParams($('#form').serialize());
             if (query.get('stop') === null && Common.getQueryStopId() !== null) {
@@ -372,7 +379,6 @@ $(document).ready(
                 .get();
             /** @var {Stop|undefined} */
             const selected_stop = $('#stop_list option:checked').first().data('model');
-            const at_stop_name = selected_stop !== undefined ? ' @ ' + selected_stop.name : '';
             /**
              * @param {URLSearchParams} a
              * @param {URLSearchParams} b
@@ -402,9 +408,9 @@ $(document).ready(
                 const query_string = '?' + query.toString();
                 window.history.pushState(query_string, undefined, query_string);
             }
-            document.title = (route_numbers.length ? route_numbers.join(', ') : 'KMB & LWB')
-                + at_stop_name
-                + ' combined ETA';
+            update_title(
+                route_numbers
+                , selected_stop !== undefined ? selected_stop.name : (localStorage[Common.getQueryStopId()] ?? null));
         }
 
         $stop_list.change(
@@ -524,9 +530,17 @@ $(document).ready(
             if (Common.getQueryOneDeparture()) {
                 $one_departure.attr('checked', 'checked');
             }
+
+            update_title(
+                Common.getQuerySelections().map(
+                    selection => selection[0].split('-')[0]
+                )
+                , localStorage[Common.getQueryStopId()] ?? null
+            )
+
             if (stop_id !== null) {
                 StopRoute.get(
-                    new Stop(stop_id, null)
+                    new Stop(stop_id, localStorage[stop_id] ?? null, null)
                     , update_common_route_list
                     , update_route_progress
                 );

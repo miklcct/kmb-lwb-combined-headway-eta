@@ -6,6 +6,9 @@ class Stop {
         this.name = name;
         this.direction = direction;
         this.sequence = sequence;
+        if (name !== null) {
+            localStorage[id] = name;
+        }
     }
 }
 
