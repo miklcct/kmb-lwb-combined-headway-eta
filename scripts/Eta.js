@@ -22,7 +22,7 @@ class Eta {
 Eta.WEB_API = 1;
 Eta.MOBILE_API = 2;
 
-Eta.API_USED = Eta.WEB_API;
+Eta.API_USED = Eta.MOBILE_API;
 
 /**
  * Compare two ETA entries by time
@@ -104,18 +104,30 @@ Eta.get = function (stopRoute, callback) {
             , handler
         );
     } else if (Eta.API_USED === Eta.MOBILE_API) {
-        $.get(
-            Common.PROXY_URL + 'https://etav3.kmb.hk/'
-            , {
-                action : 'geteta',
-                route : stopRoute.variant.route.number,
-                bound : stopRoute.variant.route.bound,
-                stop_seq : stopRoute.sequence,
-                serviceType : stopRoute.variant.serviceType,
-                lang : 'en',
-                updated : '',
+        const secret = Secret.getSecret(new Date().toISOString().split('.')[0] + 'Z')
+        const query = {
+            lang : 'en',
+            route : stopRoute.variant.route.number,
+            bound : stopRoute.variant.route.bound,
+            stop_seq : stopRoute.sequence,
+            serviceType : stopRoute.variant.serviceType,
+            vendor_id : Secret.VENDOR_ID,
+            apiKey : secret.apiKey,
+            ctr : secret.ctr
+        };
+        const encrypted_query = Secret.getSecret('?' + new URLSearchParams(query).toString(), secret.ctr);
+        $.post(
+            {
+                url : Common.PROXY_URL + 'https://etav3.kmb.hk/?action=geteta',
+                data : JSON.stringify(
+                    {
+                        d : encrypted_query.apiKey,
+                        ctr : encrypted_query.ctr
+                    }
+                ),
+                success : handler,
+                contentType : 'application/json',
             }
-            , handler
         );
     } else {
 
