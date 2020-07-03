@@ -116,19 +116,23 @@ Eta.get = function (stopRoute, callback) {
             ctr : secret.ctr
         };
         const encrypted_query = Secret.getSecret('?' + new URLSearchParams(query).toString(), secret.ctr);
-        $.post(
-            {
-                url : Common.PROXY_URL + 'https://etav3.kmb.hk/?action=geteta',
-                data : JSON.stringify(
-                    {
-                        d : encrypted_query.apiKey,
-                        ctr : encrypted_query.ctr
-                    }
-                ),
-                success : handler,
-                contentType : 'application/json',
-            }
-        );
+        if (false) {
+            $.post(
+                {
+                    url : Common.PROXY_URL + 'https://etav3.kmb.hk/?action=geteta',
+                    data : JSON.stringify(
+                        {
+                            d : encrypted_query.apiKey,
+                            ctr : encrypted_query.ctr
+                        }
+                    ),
+                    success : handler,
+                    contentType : 'application/json',
+                }
+            );
+        } else {
+            $.get(Common.PROXY_URL + 'https://etav3.kmb.hk/?action=geteta', query, handler)
+        }
     } else {
 
     }
