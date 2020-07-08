@@ -34,3 +34,9 @@ select {
 .rdv {
     font-size: 0.7em;
 }
+
+.route {
+    cursor: pointer;
+    color: blue;
+    text-decoration: underline;
+}
