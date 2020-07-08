@@ -23,6 +23,7 @@ Eta.WEB_API = 1;
 Eta.MOBILE_API = 2;
 
 Eta.API_USED = Eta.MOBILE_API;
+Eta.MOBILE_API_METHOD = 'POST';
 
 /**
  * Compare two ETA entries by time
@@ -43,15 +44,14 @@ Eta.compare = function (a, b) {
  */
 Eta.get = function (stopRoute, callback) {
     /**
-     *
-     * @param {object[]} json.response
+     * @param {array|object} json
      * @param {object[]} json.data.response
      */
     const handler = function (json) {
         callback(
             (Eta.API_USED === Eta.WEB_API
                 ? json.data.response
-                : Eta.API_USED === Eta.MOBILE_API ? json.response : []
+                : Eta.API_USED === Eta.MOBILE_API ? json[0].eta : []
             )
                 .map(
                     /**
@@ -110,13 +110,13 @@ Eta.get = function (stopRoute, callback) {
             route : stopRoute.variant.route.number,
             bound : stopRoute.variant.route.bound,
             stop_seq : stopRoute.sequence,
-            serviceType : stopRoute.variant.serviceType,
+            service_type : stopRoute.variant.serviceType,
             vendor_id : Secret.VENDOR_ID,
             apiKey : secret.apiKey,
             ctr : secret.ctr
         };
         const encrypted_query = Secret.getSecret('?' + new URLSearchParams(query).toString(), secret.ctr);
-        if (false) {
+        if (Eta.MOBILE_API_METHOD === 'POST') {
             $.post(
                 {
                     url : Common.PROXY_URL + 'https://etav3.kmb.hk/?action=geteta',
