@@ -467,7 +467,7 @@ $(document).ready(
             const eta = $(this).closest('tr').data('model')
             if (eta !== undefined) {
                 click_route.eta = eta;
-                $route.val(eta.stopRoute.variant.route);
+                $route.val(eta.stopRoute.variant.route.number);
                 $route_submit.click();
             }
         }
