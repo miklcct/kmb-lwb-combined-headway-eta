@@ -495,6 +495,7 @@ $(document).ready(
             $variant_list.empty();
             $stop_list.empty();
             $common_route_list.empty();
+            $eta_body.empty();
 
             const stop_id = Common.getQueryStopId();
             if (Common.getQueryOneDeparture()) {
