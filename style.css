@@ -22,3 +22,9 @@ select {
 #route_list_loading {
     display: none;
 }
+
+.route {
+    cursor: pointer;
+    color: blue;
+    text-decoration: underline;
+}

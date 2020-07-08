@@ -454,6 +454,17 @@ $(document).ready(
             }
         );
 
+        const click_route = function () {
+            /** @type {Eta|undefined} */
+            const eta = $(this).closest('tr').data('model')
+            if (eta !== undefined) {
+                click_route.eta = eta;
+                $route.val(eta.stopRoute.variant.route);
+                $route_submit.click();
+            }
+        }
+        click_route.eta = null;
+
         const update_eta = function () {
             $eta_loading.css('visibility', 'visible');
             let count = 0;
@@ -467,10 +478,11 @@ $(document).ready(
                     all_etas.sort(Eta.compare);
                     const get_eta_row = function (eta) {
                         return $('<tr/>')
-                            .append($('<td/>').text(eta.time === null ? '' : eta.time.hhmm()).css('font-weight', eta.realTime ? 'bold' : null))
-                            .append($('<td/>').text(eta.stopRoute.variant.route.number))
+                            .append($('<td/>').text(eta.time === null ? '' : eta.time.hhmmss()).css('font-weight', eta.realTime ? 'bold' : null))
+                            .append($('<td/>').append($('<span class="route"/>').text(eta.stopRoute.variant.route.number).click(click_route)))
                             .append($('<td/>').text(eta.distance))
-                            .append($('<td/>').text(eta.remark));
+                            .append($('<td/>').text(eta.remark))
+                            .data('model', eta);
                     };
                     $eta_body.empty();
                     if (Common.getQueryOneDeparture()) {
