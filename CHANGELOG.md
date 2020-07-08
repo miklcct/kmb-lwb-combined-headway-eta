@@ -1,3 +1,6 @@
+## [1.6.0] (2020-07-??)
+* route is now clickable, which will change the form to load the specified route
+
 ## [1.5.2] (2020-06-23)
 * set page title during initialisation
 
