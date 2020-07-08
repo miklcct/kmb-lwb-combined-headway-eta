@@ -389,7 +389,6 @@ $(document).ready(
                 /** @var {Stop|undefined} */
                 const stop = $('#stop_list option:checked').first().data('model');
                 if (stop !== undefined) {
-                    save_state();
                     if ($common_route_list.data('stop_id') !== stop.id) {
                         $common_route_list.empty().attr('disabled', 'disabled');
                         StopRoute.get(stop, update_common_route_list);
