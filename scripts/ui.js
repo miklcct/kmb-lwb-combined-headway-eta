@@ -500,6 +500,8 @@ $(document).ready(
             const stop_id = Common.getQueryStopId();
             if (Common.getQueryOneDeparture()) {
                 $one_departure.attr('checked', 'checked');
+            } else {
+                $one_departure.removeAttr('checked');
             }
 
             update_title(
