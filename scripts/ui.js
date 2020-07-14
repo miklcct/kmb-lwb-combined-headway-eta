@@ -317,13 +317,17 @@ $(document).ready(
                         /** @var {StopRoute} */
                         const stopRoute = $this.data('model');
                         if (stopRoute !== undefined) {
+                            const $stop = $('#stop_list option:checked').first();
+                            /** @var {Stop|undefined} */
+                            const stop = $stop.data('model');
+                            const stop_id = stop?.id ?? Common.getQueryStopId()
                             if (
                                 query_selections.find(
                                     function (/** Array */ selection) {
                                         return selection[0] === stopRoute.variant.route.getRouteBound()
                                             && (selection[1] === null || selection[1] === stopRoute.sequence)
                                             && (
-                                                stopRoute.stop.id === Common.getQueryStopId()
+                                                stopRoute.stop.id === stop_id
                                                 || (i && !found_exact_matches.hasOwnProperty(stopRoute.variant.route.getRouteBound()))
                                             )
                                     }
@@ -331,14 +335,14 @@ $(document).ready(
                                 ||
                                 stopRoute.variant.route.number === $route.val()
                                 && stopRoute.variant.route.bound === Number($bound.val())
-                                && stopRoute.stop.id === Common.getQueryStopId()
+                                && stopRoute.stop.id === stop_id
                                 && (
                                     stopRoute.variant.serviceType !== Number($variant_list.val())
-                                    || stopRoute.sequence === $('#stop_list option:checked').first().data('sequence')
+                                    || stopRoute.sequence === $stop.data('sequence')
                                 )
                             ) {
                                 $this.attr('selected', 'selected');
-                                if (stopRoute.stop.id === Common.getQueryStopId()) {
+                                if (stopRoute.stop.id === stop_id) {
                                     found_exact_matches[stopRoute.variant.route.getRouteBound()] = stopRoute;
                                 }
                             }
@@ -463,7 +467,7 @@ $(document).ready(
             const eta = $(this).closest('tr').data('model')
             if (eta !== undefined) {
                 click_route.eta = eta;
-                $route.val(eta.stopRoute.variant.route);
+                $route.val(eta.stopRoute.variant.route.number);
                 $route_submit.click();
             }
         }
@@ -482,7 +486,7 @@ $(document).ready(
                     all_etas.sort(Eta.compare);
                     const get_eta_row = function (eta) {
                         return $('<tr/>')
-                            .append($('<td/>').text(eta.time === null ? '' : eta.time.hhmmss()).css('font-weight', eta.realTime ? 'bold' : null))
+                            .append($('<td/>').text(eta.time === null ? '' : eta.time.hhmm()).css('font-weight', eta.realTime ? 'bold' : null))
                             .append($('<td/>').append($('<span class="route"/>').text(eta.stopRoute.variant.route.number).click(click_route)))
                             .append($('<td/>').text(eta.distance))
                             .append($('<td/>').text(eta.remark))
