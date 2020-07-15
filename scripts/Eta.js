@@ -23,7 +23,7 @@ Eta.WEB_API = 1;
 Eta.MOBILE_API = 2;
 
 Eta.API_USED = Eta.MOBILE_API;
-Eta.MOBILE_API_METHOD = 'POST';
+Eta.MOBILE_API_METHOD = 'GET';
 
 /**
  * Compare two ETA entries by time
