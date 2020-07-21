@@ -431,6 +431,7 @@ $(document).ready(
                     if ($common_route_list.data('stop_id') !== stop.id) {
                         $common_route_list.empty().attr('disabled', 'disabled');
                         $eta_body.empty();
+                        ++update_eta.batch;
                         StopRoute.get(stop, update_common_route_list, update_route_progress);
                         $common_route_list.data('stop_id', stop.id);
                     } else {
@@ -494,6 +495,7 @@ $(document).ready(
                             .data('model', eta);
                     };
                     $eta_body.empty();
+                    ++update_eta.batch;
                     if (Common.getQueryOneDeparture()) {
                         const shown_variants = [];
                         all_etas.forEach(
