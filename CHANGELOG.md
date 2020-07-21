@@ -1,3 +1,6 @@
+## [1.6.1] (2020-07-??)
+* clear ETAs when changing stop
+
 ## [1.6.0] (2020-07-08)
 * use new mobile API to get ETA
 * route is now clickable, which will change the form to load the specified route
