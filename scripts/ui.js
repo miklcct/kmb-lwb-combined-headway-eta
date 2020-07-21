@@ -391,6 +391,7 @@ $(document).ready(
                 if (stop !== undefined) {
                     if ($common_route_list.data('stop_id') !== stop.id) {
                         $common_route_list.empty().attr('disabled', 'disabled');
+                        $eta_body.empty();
                         StopRoute.get(stop, update_common_route_list);
                         $common_route_list.data('stop_id', stop.id);
                     } else {
