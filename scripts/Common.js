@@ -21,7 +21,7 @@ const Common = {
                 data = preprocess(data);
             }
             handler(
-                data.split('<br>').filter(
+                data.trim().split('<br>').filter(
                     function (line) {
                         return line !== '';
                     }
