@@ -36,12 +36,23 @@ Stop.get = function (/** Variant */ variant, /** function(array<Stop>) */ callba
                 json.data.routeStops.map(
                     /**
                      * @param {string} item.BSICode
-                     * @param {string} item.EName
                      * @param {string} item.Direction
                      * @param {string} item.Seq
                      * @returns {!Stop}
                      */
-                    item => new Stop(item.BSICode, item.EName.toTitleCase(), item.Direction.trim(), Number(item.Seq))
+                    item => new Stop(
+                        item.BSICode
+                        , item[
+                            {
+                                'en' : 'EName',
+                                'zh-hans' : 'SCName',
+                                'zh-hant' : 'CName'
+                            }[Common.getLanguage()]
+                        ]
+                            .toTitleCase()
+                        , item.Direction.trim()
+                        , Number(item.Seq)
+                    )
                 )
             );
         }
