@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-hant" lang="zh-hant">
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1"/>
         <link rel="stylesheet" href="style.css" />
@@ -15,44 +15,44 @@
         <script src="scripts/Eta.js"></script>
         <script src="scripts/Secret.js"></script>
         <script src="scripts/ui.js"></script>
-        <title>KMB &amp; LWB combined ETA</title>
+        <title>九巴及龍運聯合班次到站時間預報</title>
     </head>
     <body>
         <table id="eta">
             <thead>
-                <tr><th>Time</th><th>Route</th><th>Distance (m)</th><th>Remark</th></tr>
+                <tr><th>時間</th><th>路線</th><th>距離（米）</th><th>備註</th></tr>
             </thead>
             <tbody />
         </table>
         <div>
-            <div id="eta_loading">Loading</div>
-            <div>Last updated: <span id="eta_last_updated"/></div>
+            <div id="eta_loading">載入中</div>
+            <div>最後更新：<span id="eta_last_updated"/></div>
         </div>
         <p id="failure"/>
         <form>
             <p>
-                <label>Enter the route number: <input id="route" name="route" maxlength="4"/></label><br/>
+                <label>輸入路線編號：<input id="route" name="route" maxlength="4"/></label><br/>
                 <input id="bound" name="bound" type="hidden" value="1" />
                 <input type="submit" id="route_submit"/>
-                <button id="switch_direction" type="button" disabled="disabled">Switch direction</button>
+                <button id="switch_direction" type="button" disabled="disabled">切換方向</button>
                 <span id="direction"/>
                 <br/>
-                <label>Choose a route variant: <select id="variant_list" name="variant" disabled="disabled"/></label><br/>
+                <label>選擇路線變體：<select id="variant_list" name="variant" disabled="disabled"/></label><br/>
             </p>
         </form>
         <form id="form">
             <p>
-                <label>Choose a stop in the list: <select id="stop_list" name="stop" disabled="disabled"/></label>
+                <label>從清單中選擇車站：<select id="stop_list" name="stop" disabled="disabled"/></label>
             </p>
-            <p><label><input type="checkbox" id="one_departure" name="one_departure" />Show the first departure only for each route</label></p>
+            <p><label><input type="checkbox" id="one_departure" name="one_departure" />只顯示每條路線首個班次</label></p>
             <div>
-                <label>Route serving the stop selected: <select multiple="multiple" id="common_route_list" name="selections" disabled="disabled"/></label>
-                <div id="route_list_loading">Loading - <span id="route_list_count">0</span> route(s) remaining</div>
+                <label>服務已選車站之路線：<select multiple="multiple" id="common_route_list" name="selections" disabled="disabled"/></label>
+                <div id="route_list_loading">載入中 - 剩餘<span id="route_list_count">0</span>條路線</div>
             </div>
         </form>
         <p>
-            © Michael Tsang 2020, released under <a href="https://opensource.org/licenses/AGPL-3.0">AGPL 3.0 Licence</a>.<br/>
-            <a href="https://github.com/miklcct/kmb-lwb-combined-headway-eta">Source available on Github.</a>
+            © Michael Tsang 2020, 於<a href="https://opensource.org/licenses/AGPL-3.0">AGPL 3.0 授權協議</a>下發佈。<br/>
+            <a href="https://github.com/miklcct/kmb-lwb-combined-headway-eta">原始碼於 Github 發佈。</a>
         </p>
         <nav>
             <a href="index.xhtml">English</a>

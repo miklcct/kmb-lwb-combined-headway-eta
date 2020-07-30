@@ -42,6 +42,27 @@ const Common = {
         return Boolean((new URLSearchParams(window.location.search)).get('one_departure'));
     },
 
+    /**
+     * Get the language used in the document
+     * @returns {string}
+     */
+    getLanguage() {
+        return $('html').attr('lang');
+    },
+
+    /**
+     * Get the language code used to query the API
+     * @return {int}
+     */
+    getLanguageCode() {
+        const mappings = {
+            'zh-hant' : 0,
+            'en' : 1,
+            'zh-hans' : 2,
+        }
+        return mappings[Common.getLanguage()];
+    },
+
     secret : null,
 };
 

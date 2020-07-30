@@ -357,9 +357,21 @@ $(document).ready(
 
         function update_title(/** !Array<string> */ route_numbers, /** ?string */ stop_name) {
             const at_stop_name = stop_name !== null ? ' @ ' + stop_name : '';
-            document.title = (route_numbers.length ? route_numbers.join(', ') : 'KMB & LWB')
+            document.title = (
+                route_numbers.length
+                    ? route_numbers.join(', ')
+                    : {
+                        'en' : 'KMB & LWB',
+                        'zh-hant' : '九巴及龍運',
+                        'zh-hans' : '巴及龙运'
+                    }[Common.getLanguage()]
+                )
                 + at_stop_name
-                + ' combined ETA';
+                + {
+                    'en' : ' combined ETA',
+                    'zh-hant' : '聯合班次到站時間預報',
+                    'zh-hans' : '联合班次到站时间预报'
+                }[Common.getLanguage()];
             history.replaceState(window.location.search, undefined, window.location.search);
         }
 
