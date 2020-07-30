@@ -1,5 +1,6 @@
-## [1.6.1] (2020-07-??)
+## [1.7.0] (2020-07-30)
 * clear ETAs when changing stop
+* support for 3 languages
 
 ## [1.6.0] (2020-07-08)
 * use new mobile API to get ETA
