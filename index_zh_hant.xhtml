@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="zh-hant" lang="zh-hant">
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1"/>
+        <link rel="stylesheet" href="style.css" />
+        <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.4.1.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.12.0/js/md5.min.js"></script>
+        <script src="scripts/Common.js"></script>
+        <script src="scripts/Route.js"></script>
+        <script src="scripts/Stop.js"></script>
+        <script src="scripts/StopRoute.js"></script>
+        <script src="scripts/Variant.js"></script>
+        <script src="scripts/Eta.js"></script>
+        <script src="scripts/ui.js"></script>
+        <title>城巴及新巴聯合班次到站時間預報</title>
+    </head>
+    <body>
+        <table id="eta">
+            <thead>
+                <tr><th>時間</th><th>路線</th><th>目的地</th><th>距離（米）</th><th>備註</th></tr>
+            </thead>
+            <tbody />
+        </table>
+        <div>
+            <div id="eta_loading">載入中</div>
+            <div>最後更新：<span id="eta_last_updated"/></div>
+        </div>
+        <p id="failure"/>
+        <form>
+            <p>
+                <label>輸入路線編號：<input id="route" name="route" maxlength="4" disabled="disabled"/></label><br/>
+                <label>或從清單中選擇路線：<br/><select id="route_list" disabled="disabled"/></label><br/>
+                <input type="submit" id="route_submit" disabled="disabled"/>
+                <button id="switch_direction" type="button" disabled="disabled">切換方向</button><br/>
+                <label>選擇路線變體：<select id="variant_list" name="variant" disabled="disabled"/></label><br/>
+            </p>
+        </form>
+        <form id="form">
+            <p>
+                <label>從清單中選擇車站：<select id="stop_list" name="stop" disabled="disabled"/></label>
+            </p>
+            <p><label><input type="checkbox" id="one_departure" name="one_departure" />只顯示每個變體首個班次</label></p>
+            <p>
+                <label>服務已選車站之路線：<select multiple="multiple" id="common_route_list" name="selections" disabled="disabled"/></label>
+            </p>
+        </form>
+        <p>
+            © Michael Tsang 2020, 於<a href="https://opensource.org/licenses/AGPL-3.0">AGPL 3.0 授權協議</a>下發佈。<br/>
+            <a href="https://github.com/miklcct/ctb-nwfb-combined-headway-eta">原始碼於 Github 發佈。</a>
+        </p>
+        <nav>
+            <a href="index.xhtml">English</a>
+            <a href="index_zh_hant.xhtml">繁體中文</a>
+            <a href="index_zh_hans.xhtml">简体中文</a>
+        </nav>
+    </body>
+</html>
