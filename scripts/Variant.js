@@ -55,7 +55,33 @@ Variant.get = function (route, callback) {
                      * @param {string} item.Desc_ENG
                      * @returns {Variant}
                      */
-                    item => new Variant(route, Number(item.ServiceType), item.Origin_ENG.toTitleCase(), item.Destination_ENG.toTitleCase(), item.Desc_ENG)
+                    item => new Variant(
+                        route
+                        , Number(item.ServiceType)
+                        , item[
+                            {
+                                'en' : 'Origin_ENG',
+                                'zh-hans' : 'Origin_CHI',
+                                'zh-hant' : 'Origin_CHI'
+                            }[Common.getLanguage()]
+                        ]
+                            .toTitleCase()
+                        , item[
+                            {
+                                'en' : 'Destination_ENG',
+                                'zh-hans' : 'Destination_CHI',
+                                'zh-hant' : 'Destination_CHI'
+                            }[Common.getLanguage()]
+                        ]
+                            .toTitleCase()
+                        , item[
+                            {
+                                'en' : 'Desc_ENG',
+                                'zh-hans' : 'Desc_CHI',
+                                'zh-hant' : 'Desc_CHI'
+                            }[Common.getLanguage()]
+                        ]
+                    )
                 )
             );
         }
