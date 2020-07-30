@@ -60,13 +60,14 @@ Eta.get = function (stopRoute, callback) {
                 function (segments) {
                     if (segments.length >= 27) {
                         const congestion_colour = segments[26].split('|')[0];
+                        const distance = Number(segments[13]);
                         etas.push(
                             new Eta(
                                 stopRoute
                                 , new Date(segments[19].split('|')[4])
                                 , segments[26].split('|')[8]
                                 , segments[26].split('|')[2]
-                                , Number(segments[13])
+                                , distance < 10 ? null : distance
                                 , [
                                     !['', '*'].includes(segments[25].split('|')[0]) ? '' : segments[23]
                                     , segments[25].split('|')[0]
