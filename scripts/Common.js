@@ -50,19 +50,6 @@ const Common = {
         return $('html').attr('lang');
     },
 
-    /**
-     * Get the language code used to query the API
-     * @return {int}
-     */
-    getLanguageCode() {
-        const mappings = {
-            'zh-hant' : 0,
-            'en' : 1,
-            'zh-hans' : 2,
-        }
-        return mappings[Common.getLanguage()];
-    },
-
     secret : null,
 };
 

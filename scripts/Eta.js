@@ -96,7 +96,8 @@ Eta.get = function (stopRoute, callback) {
         const sep = "--31" + date_string + "13--";
         var token = "EA" + btoa(stopRoute.variant.route.number + sep + stopRoute.variant.route.bound + sep + stopRoute.variant.serviceType + sep + stopRoute.stop.id.trim().replace(/-/gi, '') + sep + stopRoute.sequence + sep + (new Date).getTime());
         $.post(
-            (location.protocol === 'https:' ? Common.PROXY_URL : '') + Common.API_ENDPOINT + "?action=get_ETA&lang=0"
+            (location.protocol === 'https:' ? Common.PROXY_URL : '') + Common.API_ENDPOINT + "?action=get_ETA&lang="
+                + {'en' : 0, 'zh-hant' : 1, 'zh-hans' : 2}[Common.getLanguage()]
             , {
                 token : token,
                 t : date_string,
@@ -106,7 +107,7 @@ Eta.get = function (stopRoute, callback) {
     } else if (Eta.API_USED === Eta.MOBILE_API) {
         const secret = Secret.getSecret(new Date().toISOString().split('.')[0] + 'Z')
         const query = {
-            lang : 'en',
+            lang : {'en' : 'en', 'zh-hans' : 'sc', 'zh-hant' : 'tc'}[Common.getLanguage()],
             route : stopRoute.variant.route.number,
             bound : stopRoute.variant.route.bound,
             stop_seq : stopRoute.sequence,
