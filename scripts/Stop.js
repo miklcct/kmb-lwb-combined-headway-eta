@@ -7,6 +7,9 @@ class Stop {
         this.name = name ?? localStorage[id][Common.getLanguage()] ?? null;
         this.stand = stand;
         if (name !== null) {
+            if (localStorage[id] === undefined) {
+                localStorage[id] = {};
+            }
             localStorage[id][Common.getLanguage()] = name;
         }
     }
