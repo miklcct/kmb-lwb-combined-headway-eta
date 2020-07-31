@@ -3,11 +3,11 @@
 class Stop {
     constructor(/** string */ id, /** ?string */ name, /** string */ direction, /** int */ sequence) {
         this.id = id;
-        this.name = name;
+        this.name = name ?? localStorage[id][Common.getLanguage()] ?? null;
         this.direction = direction;
         this.sequence = sequence;
         if (name !== null) {
-            localStorage[id] = name;
+            localStorage[id][Common.getLanguage()] = name;
         }
     }
 }

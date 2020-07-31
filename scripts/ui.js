@@ -1,5 +1,7 @@
 'use strict';
 
+const LOCAL_STORAGE_VERSION = 1; // update this when local storage used is no longer compatible
+
 /*
  * Test cases:
  * 1. real circular route (e.g. 701 test Hoi Lai Estate, Fu Cheong Estate, Bute Street, Mong Kok Road, Island Harbourview, Nam Cheong Estate)
@@ -52,6 +54,11 @@ Date.prototype.hhmmss = function () {
 
 $(document).ready(
     function () {
+        if (Number(localStorage['$VERSION']) !== LOCAL_STORAGE_VERSION) {
+            localStorage.clear();
+            localStorage['$VERSION'] = LOCAL_STORAGE_VERSION;
+        }
+
         const $common_route_list = $('#common_route_list');
         const $route = $('#route');
         const $bound = $('#bound');
@@ -570,16 +577,17 @@ $(document).ready(
                 $one_departure.removeAttr('checked');
             }
 
+            const stop = stop_id !== null ? new Stop(stop_id, null, null) : null;
             update_title(
                 Common.getQuerySelections().map(
                     selection => selection[0].split('-')[0]
                 )
-                , localStorage[Common.getQueryStopId()] ?? null
+                , stop?.name ?? null
             )
 
             if (stop_id !== null) {
                 StopRoute.get(
-                    new Stop(stop_id, localStorage[stop_id] ?? null, null)
+                    stop
                     , update_common_route_list
                     , update_route_progress
                 );
