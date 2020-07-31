@@ -4,10 +4,10 @@ class Stop {
     constructor(/** int */ id, /** ?string */ name, /** ?string */ stand) {
         id = Number(id);
         this.id = id;
-        this.name = name;
+        this.name = name ?? localStorage[id][Common.getLanguage()] ?? null;
         this.stand = stand;
         if (name !== null) {
-            localStorage[id] = name;
+            localStorage[id][Common.getLanguage()] = name;
         }
     }
 }
