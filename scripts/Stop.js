@@ -7,6 +7,9 @@ class Stop {
         this.direction = direction;
         this.sequence = sequence;
         if (name !== null) {
+            if (localStorage[id] === undefined) {
+                localStorage[id] = {};
+            }
             localStorage[id][Common.getLanguage()] = name;
         }
     }
