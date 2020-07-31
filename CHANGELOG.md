@@ -1,3 +1,6 @@
+## [1.7.1] (2020-07-31)
+* fix common route list missing routes when switching languages
+
 ## [1.7.0] (2020-07-30)
 * clear ETAs when changing stop
 * support for 3 languages
