@@ -532,7 +532,7 @@ $(document).ready(
                 Common.getQuerySelections().map(
                     selection => selection[0].split('-')[0]
                 )
-                , stop?.name
+                , stop?.name ?? null
             )
 
             if (stop_id !== null) {
