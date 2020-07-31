@@ -370,7 +370,7 @@ $(document).ready(
                     : {
                         'en' : 'KMB & LWB',
                         'zh-hant' : '九巴及龍運',
-                        'zh-hans' : '巴及龙运'
+                        'zh-hans' : '九巴及龙运'
                     }[Common.getLanguage()]
                 )
                 + at_stop_name
