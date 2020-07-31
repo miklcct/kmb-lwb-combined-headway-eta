@@ -341,6 +341,12 @@ $(document).ready(
                     'zh-hans' : '联合班次到站时间预报'
                 }[Common.getLanguage()];
             history.replaceState(window.location.search, undefined, window.location.search);
+            ['en_link', 'zh_hans_link', 'zh_hant_link'].forEach(
+                element => {
+                    const $element = $('#' + element);
+                    $element.attr('href', $element.attr('href').replace(/(\?.*)?$/, window.location.search));
+                }
+            );
         }
 
         function save_state() {
