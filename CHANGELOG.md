@@ -1,3 +1,6 @@
+## [1.8.0] (2020-07-31)
+* preserve selection when clicking language link
+
 ## [1.7.1] (2020-07-31)
 * fix common route list missing routes when switching languages
 
