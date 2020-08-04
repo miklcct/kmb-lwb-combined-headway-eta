@@ -35,11 +35,13 @@ Date.prototype.hhmmss = function () {
     $(document).ajaxError(
         function (/** Event */ event, /** XMLHttpRequest */ jqXHR, /** Object */ ajaxSettings) {
             if (jqXHR.readyState === 4 && jqXHR.status < 500) {
-                const $failure = $('#failure');
-                $failure.append($('<span/>').text(('AJAX call to ' + ajaxSettings.url + ' failed: ' + jqXHR.status).trim()))
-                    .append($('<br/>'));
-                $failure.css('display', 'block');
-                debugger;
+                if (jqXHR.status !== 403) {
+                    const $failure = $('#failure');
+                    $failure.append($('<span/>').text(('AJAX call to ' + ajaxSettings.url + ' failed: ' + jqXHR.status).trim()))
+                        .append($('<br/>'));
+                    $failure.css('display', 'block');
+                    debugger;
+                }
             } else {
                 setTimeout(
                     function () {
