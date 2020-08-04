@@ -454,6 +454,8 @@ $(document).ready(
             function () {
                 /** @var {Stop|undefined} */
                 const stop = $('#stop_list option:checked').first().data('model');
+                /** @var {Variant|undefined} */
+                const selected_variant = $('#variant_list option:checked').first().data('model');
                 if (stop !== undefined) {
                     if ($common_route_list.data('stop_id') !== stop.id) {
                         $common_route_list.empty().attr('disabled', 'disabled');
@@ -473,7 +475,11 @@ $(document).ready(
                                         /** @var {StopRoute|undefined} */
                                         const model = $(this).data('model');
                                         if (model !== undefined) {
-                                            const exact_match = model.stop.id === stop.id;
+                                            const exact_match = model.stop.id === stop.id
+                                                && (
+                                                    selected_variant?.serviceType !== model.variant.serviceType
+                                                    || model.sequence === stop.sequence
+                                                );
                                             if (model.variant.route.getRouteBound() === selected_route.getRouteBound() && (exact_match || i && !exact_match_found)) {
                                                 $(this).attr('selected', 'selected');
                                                 if (exact_match) {
