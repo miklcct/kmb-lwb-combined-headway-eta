@@ -1,3 +1,6 @@
+## [1.8.1] (2020-08-04)
+* prevent showing 403 errors with expired API key
+
 ## [1.8.0] (2020-07-31)
 * preserve selection when clicking language link
 
