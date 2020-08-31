@@ -454,7 +454,11 @@ $(document).ready(
 
             function show_eta() {
                 if (count === 0) {
-                    all_etas.sort(Eta.compare);
+                    const now = Date.now()
+                    const filtered_etas = all_etas.sort(Eta.compare).filter(
+                        // filter only entries from one minute past now
+                        /** Eta */ eta => eta.time.getTime() - now >= -60 * 1000
+                    );
                     const get_eta_row = function (eta) {
                         return $('<tr/>').css('color', eta.colour)
                             .append($('<td/>').text(eta.time === null ? '' : eta.time.hhmmss()).css('font-weight', eta.realTime ? 'bold' : null))
@@ -472,7 +476,7 @@ $(document).ready(
                     ++update_eta.batch;
                     if (Common.getQueryOneDeparture()) {
                         const shown_variants = [];
-                        all_etas.forEach(
+                        filtered_etas.forEach(
                             function (eta) {
                                 if (!shown_variants.includes(eta.rdv)) {
                                     $eta_body.append(get_eta_row(eta));
@@ -481,7 +485,7 @@ $(document).ready(
                             }
                         )
                     } else {
-                        $eta_body.append(all_etas.slice(0, 3).map(get_eta_row));
+                        $eta_body.append(filtered_etas.slice(0, 3).map(get_eta_row));
                     }
                     $eta_loading.css('visibility', 'hidden');
                     $eta_last_updated.text((new Date).hhmmss());
