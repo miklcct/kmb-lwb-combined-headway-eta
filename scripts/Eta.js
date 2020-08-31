@@ -55,7 +55,7 @@ Eta.get = function (stopRoute, callback) {
             callback(
                 (Eta.API_USED === Eta.WEB_API
                         ? json.data.response
-                        : Eta.API_USED === Eta.MOBILE_API ? json[0].eta : []
+                        : Eta.API_USED === Eta.MOBILE_API ? (json[0]?.eta ?? []) : []
                 )
                     .map(
                         /**
