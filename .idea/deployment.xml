@@ -5,7 +5,7 @@
       <paths name="miklcct.com">
         <serverdata>
           <mappings>
-            <mapping deploy="/public/nwfb_eta" local="$PROJECT_DIR$" web="/nwfb_eta" />
+            <mapping deploy="/html/kmb_eta" local="$PROJECT_DIR$" web="/kmb_eta" />
           </mappings>
         </serverdata>
       </paths>
