@@ -24,7 +24,7 @@ StopRoute.get = function (stop, callback, update_count) {
          * @param {array<string>} json.data
          */
         , function (json) {
-            const cached = sessionStorage.getItem(stop.id);
+            const cached = sessionStorage.getItem(stop.id + '_' + Common.getLanguage());
             if (cached !== null) {
                 const result = JSON.parse(cached);
                 Object.entries(result).forEach(
@@ -110,7 +110,7 @@ StopRoute.get = function (stop, callback, update_count) {
                                                                                 update_count(remaining_routes);
                                                                             }
                                                                             if (remaining_routes === 0) {
-                                                                                sessionStorage.setItem(stop.id, JSON.stringify(results))
+                                                                                sessionStorage.setItem(stop.id + '_' + Common.getLanguage(), JSON.stringify(results))
                                                                                 postprocess();
                                                                             }
                                                                         }
