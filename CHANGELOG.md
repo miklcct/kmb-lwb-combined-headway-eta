@@ -1,3 +1,6 @@
+## [1.8.3] (2020-10-01)
+* cache common route list
+
 ## [1.8.2] (2020-08-31)
 * do not show past ETAs
 * prevent Javascript error when searching TRAM
