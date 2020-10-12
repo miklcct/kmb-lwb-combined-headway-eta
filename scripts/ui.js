@@ -527,10 +527,6 @@ $(document).ready(
             return eta;
         };
 
-        const eta_compare = function (a, b) {
-            return (a.time === null ? Infinity : a.time.getTime()) - (b.time === null ? Infinity : b.time.getTime());
-        };
-
         const update_eta = function () {
             $eta_loading.css('visibility', 'visible');
             let count = 0;
@@ -542,7 +538,7 @@ $(document).ready(
             function show_eta() {
                 if (count === 0) {
                     const now = Date.now()
-                    const filtered_etas = all_etas.map(eta_convert).sort(eta_compare).filter(
+                    const filtered_etas = all_etas.map(eta_convert).sort(Eta.compare).filter(
                         // filter only entries from one minute past now
                         /** Eta */ eta => eta.time.getTime() - now >= -60 * 1000
                     );

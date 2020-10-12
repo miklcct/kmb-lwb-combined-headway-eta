@@ -22,6 +22,17 @@ class Eta {
 Eta.MOBILE_API_METHOD = 'GET';
 
 /**
+ * Compare two ETA entries by time
+ *
+ * @param {Eta} a
+ * @param {Eta} b
+ * @returns {int}
+ */
+Eta.compare = function (a, b) {
+    return (a.time === null ? Infinity : a.time.getTime()) - (b.time === null ? Infinity : b.time.getTime());
+};
+
+/**
  * Get a list of ETAs by a route at stop
  *
  * @param {StopRoute} stopRoute
