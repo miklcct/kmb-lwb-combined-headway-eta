@@ -508,6 +508,29 @@ $(document).ready(
         }
         click_route.eta = null;
 
+        const eta_convert = function (eta) {
+            const now = Date.now();
+            const time = new Date();
+            const offsetHours = -8 - time.getTimezoneOffset() / 60;
+            const offsetMs = 60 * 60 * 1000 * offsetHours;
+            time.setHours(Number(eta.time.split(':')[0]) + offsetHours, Number(eta.time.split(':')[1]), 0);
+            if (time.getTime() + offsetMs - now < -60 * 60 * 1000 * 2) {
+                // the time is less than 2 hours past - assume midnight rollover
+                time.setDate(time.getDate() + 1);
+            }
+            if (time.getTime() + offsetMs - now > 60 * 60 * 1000 * 6) {
+                // the time is more than 6 hours in the future - assume midnight rollover
+                time.setDate(time.getDate() - 1);
+            }
+
+            eta.time = time;
+            return eta;
+        };
+
+        const eta_compare = function (a, b) {
+            return (a.time === null ? Infinity : a.time.getTime()) - (b.time === null ? Infinity : b.time.getTime());
+        };
+
         const update_eta = function () {
             $eta_loading.css('visibility', 'visible');
             let count = 0;
@@ -519,7 +542,7 @@ $(document).ready(
             function show_eta() {
                 if (count === 0) {
                     const now = Date.now()
-                    const filtered_etas = all_etas.sort(Eta.compare).filter(
+                    const filtered_etas = all_etas.map(eta_convert).sort(eta_compare).filter(
                         // filter only entries from one minute past now
                         /** Eta */ eta => eta.time.getTime() - now >= -60 * 1000
                     );
