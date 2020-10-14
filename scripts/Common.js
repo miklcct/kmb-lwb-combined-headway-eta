@@ -7,11 +7,11 @@ export const Common = {
     /**
      * Call the KMB API
      *
-     * @param {Object<string, string>} query The query string parameters, except the common "syscode" and "l"
-     * @param {function(object)} callback The handler for the returned JSON
+     * @param {object<string, string>} query The query string parameters, except the common "syscode" and "l"
+     * @return {Promise<object>}
      */
-    callApi : function (query, callback) {
-        $.get(Common.API_ENDPOINT, query, callback);
+    callApi : async function (query) {
+        return $.get(Common.API_ENDPOINT, query);
     },
 
     /**

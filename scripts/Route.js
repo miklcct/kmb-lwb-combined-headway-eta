@@ -73,29 +73,22 @@ Route.compare = function (/** Route */ a, /** Route */ b) {
 /**
  *
  * @param {string} route
- * @param {function(int[])} callback
+ * @return Promise<int[]>
  */
-Route.getBounds = function (route, callback) {
-    Common.callApi(
+Route.getBounds = async function (route) {
+    const json = await Common.callApi(
         {
             action : 'getroutebound',
             route : route
         }
-        /**
-         * @param {array<object>} json.data
-         */
-        , function (json) {
-            callback(
-                json.data.map(
-                    /**
-                     *
-                     * @param {string} item.ROUTE
-                     * @param {string} item.BOUND
-                     * @param {string} item.SERVICE_TYPE
-                     */
-                    item => item.BOUND
-                ).filter((value, index, array) => array.indexOf(value) === index)
-            );
-        }
     );
+    return json.data.map(
+        /**
+         *
+         * @param {string} item.ROUTE
+         * @param {string} item.BOUND
+         * @param {string} item.SERVICE_TYPE
+         */
+        item => item.BOUND
+    ).filter((value, index, array) => array.indexOf(value) === index)
 };

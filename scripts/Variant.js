@@ -29,64 +29,60 @@ Variant.prototype.getOriginDestinationString = function () {
  * Get the list of variants from a route
  *
  * @param {Route} route
- * @param {function(array<!Variant>)} callback
+ * @return array<!Variant>)
  */
-Variant.get = function (route, callback) {
-    Common.callApi(
+Variant.get = async function (route) {
+    /**
+     *
+     * @param {object} json
+     * @param {object} json.data
+     * @param {int} json.data.CountSpecal
+     * @param {array<object>>} json.data.routes
+     * @param {boolean} json.result
+     */
+    const json = await Common.callApi(
         {
             action : 'getSpecialRoute',
             route : route.number,
             bound : route.bound,
         }
+    );
+    return json.data.routes.map(
         /**
-         *
-         * @param {object} json
-         * @param {object} json.data
-         * @param {int} json.data.CountSpecal
-         * @param {array<object>>} json.data.routes
-         * @param {boolean} json.result
+         * @param {object} item
+         * @param {string} item.ServiceType
+         * @param {string} item.Origin_ENG
+         * @param {string} item.Destination_ENG
+         * @param {string} item.Desc_ENG
+         * @returns {Variant}
          */
-        , function (json) {
-            callback(
-                json.data.routes.map(
-                    /**
-                     * @param {object} item
-                     * @param {string} item.ServiceType
-                     * @param {string} item.Origin_ENG
-                     * @param {string} item.Destination_ENG
-                     * @param {string} item.Desc_ENG
-                     * @returns {Variant}
-                     */
-                    item => new Variant(
-                        route
-                        , Number(item.ServiceType)
-                        , item[
-                            {
-                                'en' : 'Origin_ENG',
-                                'zh-hans' : 'Origin_CHI',
-                                'zh-hant' : 'Origin_CHI'
-                            }[Common.getLanguage()]
-                        ]
-                            .toTitleCase()
-                        , item[
-                            {
-                                'en' : 'Destination_ENG',
-                                'zh-hans' : 'Destination_CHI',
-                                'zh-hant' : 'Destination_CHI'
-                            }[Common.getLanguage()]
-                        ]
-                            .toTitleCase()
-                        , item[
-                            {
-                                'en' : 'Desc_ENG',
-                                'zh-hans' : 'Desc_CHI',
-                                'zh-hant' : 'Desc_CHI'
-                            }[Common.getLanguage()]
-                        ]
-                    )
-                )
-            );
-        }
+        item => new Variant(
+            route
+            , Number(item.ServiceType)
+            , item[
+                {
+                    'en' : 'Origin_ENG',
+                    'zh-hans' : 'Origin_CHI',
+                    'zh-hant' : 'Origin_CHI'
+                }[Common.getLanguage()]
+            ]
+                .toTitleCase()
+            , item[
+                {
+                    'en' : 'Destination_ENG',
+                    'zh-hans' : 'Destination_CHI',
+                    'zh-hant' : 'Destination_CHI'
+                }[Common.getLanguage()]
+            ]
+                .toTitleCase()
+            , item[
+                {
+                    'en' : 'Desc_ENG',
+                    'zh-hans' : 'Desc_CHI',
+                    'zh-hant' : 'Desc_CHI'
+                }[Common.getLanguage()]
+            ]
+        )
     );
 };
 

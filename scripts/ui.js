@@ -41,21 +41,12 @@ Date.prototype.hhmmss = function () {
 (function () {
     $(document).ajaxError(
         function (/** Event */ event, /** XMLHttpRequest */ jqXHR, /** Object */ ajaxSettings) {
-            if (jqXHR.readyState === 4 && jqXHR.status < 500) {
-                if (jqXHR.status !== 403) {
-                    const $failure = $('#failure');
-                    $failure.append($('<span/>').text(('AJAX call to ' + ajaxSettings.url + ' failed: ' + jqXHR.status).trim()))
-                        .append($('<br/>'));
-                    $failure.css('display', 'block');
-                    debugger;
-                }
-            } else {
-                setTimeout(
-                    function () {
-                        $.ajax(ajaxSettings);
-                    }
-                    , 1000
-                );
+            if (jqXHR.readyState === 4 && jqXHR.status < 500 && jqXHR.status !== 429 && jqXHR.status !== 403) {
+                const $failure = $('#failure');
+                $failure.append($('<span/>').text(('AJAX call to ' + ajaxSettings.url + ' failed: ' + jqXHR.status).trim()))
+                    .append($('<br/>'));
+                $failure.css('display', 'block');
+                debugger;
             }
         }
     );
@@ -85,66 +76,57 @@ $(document).ready(
 
         $eta_loading.css('visibility', 'hidden');
 
-        function change_route() {
+        async function change_route() {
             const input = $route.val().toUpperCase();
             $route.val(input);
             $switch_direction.attr('disabled', 'disabled');
             $variant_list.attr('disabled', 'disabled');
-            Route.getBounds(
-                input
-                /**
-                 * @param {array<int>} bounds
-                 */
-                , function (bounds) {
-                    if (bounds.length === 0) {
-                        alert('Invalid route');
-                        return;
-                    }
-                    if (bounds.length !== 1) {
-                        $switch_direction.removeAttr('disabled');
-                    }
+            /** @var {int[]} */
+            const bounds = await Route.getBounds(input);
+            if (bounds.length === 0) {
+                alert('Invalid route');
+                return;
+            }
+            if (bounds.length !== 1) {
+                $switch_direction.removeAttr('disabled');
+            }
 
-                    const model = new Route(input, Number($bound.val()));
-                    $route.first().data('model', model);
-                    $direction.text('');
-                    Variant.get(
-                        model
-                        , function (/** array<!Variant> */ variants) {
-                            $variant_list.empty().append($('<option/>'));
-                            const sorted = variants.sort(
-                                (/** !Variant */ a, /** !Variant */ b) => a.serviceType - b.serviceType
-                            );
-                            if (sorted.length > 0) {
-                                $direction.text(sorted[0].getOriginDestinationString());
+            const model = new Route(input, Number($bound.val()));
+            $route.first().data('model', model);
+            $direction.text('');
+            /** @var {!Variant[]} */
+            const variants = await Variant.get(model);
+            $variant_list.empty().append($('<option/>'));
+            const sorted = variants.sort(
+                (/** !Variant */ a, /** !Variant */ b) => a.serviceType - b.serviceType
+            );
+            if (sorted.length > 0) {
+                $direction.text(sorted[0].getOriginDestinationString());
+            }
+            sorted.forEach(
+                function (/** Variant */ variant) {
+                    const $option = $('<option/>').attr('value', variant.serviceType)
+                        .text(variant.serviceType + ' ' + variant.getOriginDestinationString() + (variant.description === '' ? '' : ' (' + variant.description + ')'))
+                        .data('model', variant);
+                    $.each(
+                        $common_route_list.children()
+                        , function () {
+                            /** @var {StopRoute|undefined} */
+                            const model = $(this).data('model');
+                            if (
+                                model !== undefined
+                                && model.variant.route.getRouteBound() === variant.route.getRouteBound()
+                                && model.variant.serviceType === variant.serviceType
+                            ) {
+                                $option.attr('selected', 'selected');
                             }
-                            sorted.forEach(
-                                function (/** Variant */ variant) {
-                                    const $option = $('<option/>').attr('value', variant.serviceType)
-                                        .text(variant.serviceType + ' ' + variant.getOriginDestinationString() + (variant.description === '' ? '' : ' (' + variant.description + ')'))
-                                        .data('model', variant);
-                                    $.each(
-                                        $common_route_list.children()
-                                        , function () {
-                                            /** @var {StopRoute|undefined} */
-                                            const model = $(this).data('model');
-                                            if (
-                                                model !== undefined
-                                                && model.variant.route.getRouteBound() === variant.route.getRouteBound()
-                                                && model.variant.serviceType === variant.serviceType
-                                            ) {
-                                                $option.attr('selected', 'selected');
-                                            }
-                                        }
-                                    );
-                                    $variant_list.append($option);
-                                }
-                            );
-                            $variant_list.removeAttr('disabled');
-                            $variant_list.change();
                         }
                     );
+                    $variant_list.append($option);
                 }
             );
+            $variant_list.removeAttr('disabled');
+            $variant_list.change();
         }
 
         $route_submit.click(
@@ -198,73 +180,70 @@ $(document).ready(
         );
 
         $variant_list.change(
-            function () {
+            async function () {
                 const variant = $('#variant_list option:checked').first().data('model');
 
                 if (variant !== undefined) {
                     $stop_list.empty().attr('disabled', 'disabled');
-                    Stop.get(
-                        variant
-                        , function (/** Array */ stops) {
-                            $stop_list.empty().append($('<option/>'));
-                            $stop_list.append(
-                                stops
-                                    .sort((/** !Stop */ a, /** !Stop */ b) => a.sequence - b.sequence)
-                                    .map(
-                                        function (/** Stop */ stop) {
-                                            return $('<option></option>').attr('value', stop.id)
-                                                .text(stop.sequence + ' ' + stop.name + ' (' + stop.id + ')')
-                                                .data('sequence', stop.sequence)
-                                                .data('model', stop);
-                                        }
-                                    )
-                            ).removeAttr('disabled');
-                            const query_stop_id = Common.getQueryStopId();
-                            if (query_stop_id !== null) {
-                                const chosen_route = (
-                                    () => {
-                                        /** @var {Route|undefined} */
-                                        const model = $route.data('model');
-                                        return model !== undefined ? model.getRouteBound() : null
-                                    }
-                                )()
-                                // handle the case when a route passes the same stop multiple times
-                                const selection = Common.getQuerySelections().find(
-                                    function (/** Array */ selection) {
-                                        return selection[0] === chosen_route && selection[1] !== null
-                                    }
-                                );
-                                if (selection !== undefined) {
-                                    $.each(
-                                        $stop_list.first().children()
-                                        , function () {
-                                            const $this = $(this);
-                                            if ($this.data('sequence') === selection[1]) {
-                                                $this.attr('selected', 'selected');
-                                            }
-                                        }
-                                    )
-                                } else {
-                                    // loop through the common route list because KMB uses different stop ID for different poles
-                                    $.each(
-                                        $common_route_list.children()
-                                        , function () {
-                                            /** @var {StopRoute} */
-                                            const model = $(this).data('model');
-                                            if (model !== undefined) {
-                                                if (model.variant.route.getRouteBound() === chosen_route) {
-                                                    $stop_list.val(model.stop.id);
-                                                }
-                                            }
-                                        }
-                                    );
+                    /** @var {!Stop[]} */
+                    const stops = await Stop.get(variant);
+                    $stop_list.empty().append($('<option/>'));
+                    $stop_list.append(
+                        stops
+                            .sort((/** !Stop */ a, /** !Stop */ b) => a.sequence - b.sequence)
+                            .map(
+                                function (/** Stop */ stop) {
+                                    return $('<option></option>').attr('value', stop.id)
+                                        .text(stop.sequence + ' ' + stop.name + ' (' + stop.id + ')')
+                                        .data('sequence', stop.sequence)
+                                        .data('model', stop);
                                 }
+                            )
+                    ).removeAttr('disabled');
+                    const query_stop_id = Common.getQueryStopId();
+                    if (query_stop_id !== null) {
+                        const chosen_route = (
+                            () => {
+                                /** @var {Route|undefined} */
+                                const model = $route.data('model');
+                                return model !== undefined ? model.getRouteBound() : null
                             }
-                            if ($stop_list.val()) {
-                                $stop_list.change();
+                        )()
+                        // handle the case when a route passes the same stop multiple times
+                        const selection = Common.getQuerySelections().find(
+                            function (/** Array */ selection) {
+                                return selection[0] === chosen_route && selection[1] !== null
                             }
+                        );
+                        if (selection !== undefined) {
+                            $.each(
+                                $stop_list.first().children()
+                                , function () {
+                                    const $this = $(this);
+                                    if ($this.data('sequence') === selection[1]) {
+                                        $this.attr('selected', 'selected');
+                                    }
+                                }
+                            )
+                        } else {
+                            // loop through the common route list because KMB uses different stop ID for different poles
+                            $.each(
+                                $common_route_list.children()
+                                , function () {
+                                    /** @var {StopRoute} */
+                                    const model = $(this).data('model');
+                                    if (model !== undefined) {
+                                        if (model.variant.route.getRouteBound() === chosen_route) {
+                                            $stop_list.val(model.stop.id);
+                                        }
+                                    }
+                                }
+                            );
                         }
-                    );
+                    }
+                    if ($stop_list.val()) {
+                        $stop_list.change();
+                    }
                 }
             }
         );
@@ -458,7 +437,7 @@ $(document).ready(
         }
 
         $stop_list.change(
-            function () {
+            async function () {
                 /** @var {Stop|undefined} */
                 const stop = $('#stop_list option:checked').first().data('model');
                 /** @var {Variant|undefined} */
@@ -468,7 +447,8 @@ $(document).ready(
                         $common_route_list.empty().attr('disabled', 'disabled');
                         $eta_body.empty();
                         ++update_eta.batch;
-                        StopRoute.get(stop, update_common_route_list, update_route_progress);
+                        const result = await StopRoute.get(stop, update_route_progress);
+                        update_common_route_list(result);
                         $common_route_list.data('stop_id', stop.id);
                     } else {
                         /** @var {Route|undefined} */
@@ -515,68 +495,53 @@ $(document).ready(
         }
         click_route.eta = null;
 
-        const update_eta = function () {
+        const update_eta = async function () {
             $eta_loading.css('visibility', 'visible');
-            let count = 0;
-            ++update_eta.batch;
-            const batch = update_eta.batch;
-            /** @type {Eta[]} */
-            const all_etas = [];
+            const batch = ++update_eta.batch;
 
-            function show_eta() {
-                if (count === 0) {
-                    const now = Date.now()
-                    const filtered_etas = all_etas.sort(Eta.compare).filter(
-                        // filter only entries from one minute past now
-                        /** Eta */ eta => eta.time.getTime() - now >= -60 * 1000
-                    );
-                    const get_eta_row = function (eta) {
-                        return $('<tr/>')
-                            .append($('<td/>').text(eta.time === null ? '' : eta.time.hhmm()).css('font-weight', eta.realTime ? 'bold' : null))
-                            .append($('<td/>').append($('<span class="route"/>').text(eta.stopRoute.variant.route.number).click(click_route)))
-                            .append($('<td/>').text(eta.distance))
-                            .append($('<td/>').text(eta.remark))
-                            .data('model', eta);
-                    };
-                    $eta_body.empty();
-                    ++update_eta.batch;
-                    if (Common.getQueryOneDeparture()) {
-                        const shown_variants = [];
-                        filtered_etas.forEach(
-                            function (eta) {
-                                if (!shown_variants.includes(eta.stopRoute.variant.route)) {
-                                    $eta_body.append(get_eta_row(eta));
-                                    shown_variants.push(eta.stopRoute.variant.route);
-                                }
-                            }
-                        )
-                    } else {
-                        $eta_body.append(filtered_etas.slice(0, 3).map(get_eta_row));
+            const now = Date.now()
+            const filtered_etas = (await Promise.all(
+                $('#common_route_list option:checked').map(
+                    function () {
+                        const model = $(this).data('model');
+                        return model !== undefined
+                            ? Eta.get(model)
+                            : []
                     }
-                    $eta_loading.css('visibility', 'hidden');
-                    $eta_last_updated.text((new Date).hhmmss());
+                )
+            ))
+                .flat()
+                .sort(Eta.compare)
+                .filter(
+                    // filter only entries from one minute past now
+                    /** Eta */ eta => eta.time.getTime() - now >= -60 * 1000
+                );
+            if (batch === update_eta.batch) {
+                const get_eta_row = function (eta) {
+                    return $('<tr/>')
+                        .append($('<td/>').text(eta.time === null ? '' : eta.time.hhmm()).css('font-weight', eta.realTime ? 'bold' : null))
+                        .append($('<td/>').append($('<span class="route"/>').text(eta.stopRoute.variant.route.number).click(click_route)))
+                        .append($('<td/>').text(eta.distance))
+                        .append($('<td/>').text(eta.remark))
+                        .data('model', eta);
+                };
+                $eta_body.empty();
+                if (Common.getQueryOneDeparture()) {
+                    const shown_variants = [];
+                    filtered_etas.forEach(
+                        function (eta) {
+                            if (!shown_variants.includes(eta.stopRoute.variant.route)) {
+                                $eta_body.append(get_eta_row(eta));
+                                shown_variants.push(eta.stopRoute.variant.route);
+                            }
+                        }
+                    )
+                } else {
+                    $eta_body.append(filtered_etas.slice(0, 3).map(get_eta_row));
                 }
+                $eta_loading.css('visibility', 'hidden');
+                $eta_last_updated.text((new Date).hhmmss());
             }
-
-            $('#common_route_list option:checked').each(
-                function () {
-                    const model = $(this).data('model');
-                    if (model !== undefined) {
-                        ++count;
-                        Eta.get(
-                            model
-                            , function (/** Array */ etas) {
-                                if (batch === update_eta.batch) {
-                                    all_etas.push(...etas);
-                                    --count;
-                                    show_eta();
-                                }
-                            }
-                        );
-                    }
-                }
-            );
-            show_eta();
         };
         update_eta.batch = 0;
         update_eta.timer = setInterval(update_eta, 15000);
@@ -588,7 +553,7 @@ $(document).ready(
         $common_route_list.change(update);
         $one_departure.change(update);
 
-        function init() {
+        async function init() {
             $route.val('');
             $variant_list.empty();
             $stop_list.empty();
@@ -602,7 +567,7 @@ $(document).ready(
                 $one_departure.removeAttr('checked');
             }
 
-            const stop = stop_id !== null ? new Stop(stop_id, null, null) : null;
+            const stop = stop_id !== null ? new Stop(stop_id, null, null, null) : null;
             update_title(
                 Common.getQuerySelections().map(
                     selection => selection[0].split('-')[0]
@@ -611,11 +576,11 @@ $(document).ready(
             )
 
             if (stop_id !== null) {
-                StopRoute.get(
+                const results = await StopRoute.get(
                     stop
-                    , update_common_route_list
                     , update_route_progress
                 );
+                update_common_route_list(results);
                 $common_route_list.data('stop_id', stop_id);
             }
         }
