@@ -1,5 +1,12 @@
 'use strict';
 
+import {Route} from "./Route.js";
+import {Common} from "./Common.js";
+import {Stop} from "./Stop.js";
+import {StopRoute} from "./StopRoute.js";
+import {Eta} from "./Eta.js";
+import {Variant} from "./Variant.js";
+
 const LOCAL_STORAGE_VERSION = 1; // update this when local storage used is no longer compatible
 
 /*

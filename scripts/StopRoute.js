@@ -1,6 +1,11 @@
 'use strict';
 
-class StopRoute {
+import {Common} from "./Common.js";
+import {Stop} from "./Stop.js";
+import {Variant} from "./Variant.js";
+import {Route} from "./Route.js";
+
+export class StopRoute {
     constructor(/** Stop */ stop, /** Variant */ variant, /** int */ sequence) {
         this.stop = stop;
         this.variant = variant;

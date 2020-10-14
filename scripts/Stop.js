@@ -1,6 +1,8 @@
 'use strict';
 
-class Stop {
+import {Common} from "./Common.js";
+
+export class Stop {
     constructor(/** string */ id, /** ?string */ name, /** string */ direction, /** int */ sequence) {
         this.id = id;
         this.name = name ?? localStorage[id + '_' + Common.getLanguage()] ?? null;

@@ -1,5 +1,5 @@
 'use strict';
-class Secret {
+export class Secret {
     constructor(/** string */ apiKey, /** int */ ctr) {
         this.apiKey = apiKey;
         this.ctr = ctr;

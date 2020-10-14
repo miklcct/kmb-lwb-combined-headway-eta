@@ -1,6 +1,8 @@
 'use strict';
 
-class Variant {
+import {Common} from "./Common.js";
+
+export class Variant {
     /**
      * Create a route variant
      *

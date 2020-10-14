@@ -1,6 +1,8 @@
 'use strict';
 
-class Route {
+import {Common} from "./Common.js";
+
+export class Route {
     constructor(/** string */ number, /** int */ bound) {
         this.number = number;
         this.bound = bound;

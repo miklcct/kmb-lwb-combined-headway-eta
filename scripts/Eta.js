@@ -1,6 +1,9 @@
 'use strict';
 
-class Eta {
+import {Common} from "./Common.js";
+import {Secret} from "./Secret.js";
+
+export class Eta {
     /**
      * Create an ETA entry
      *

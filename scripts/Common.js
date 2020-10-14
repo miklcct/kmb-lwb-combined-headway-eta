@@ -1,6 +1,6 @@
 'use strict';
 
-const Common = {
+export const Common = {
     PROXY_URL : 'https://miklcct.com/proxy/',
     API_ENDPOINT : 'https://search.kmb.hk/KMBWebSite/Function/FunctionRequest.ashx',
 
