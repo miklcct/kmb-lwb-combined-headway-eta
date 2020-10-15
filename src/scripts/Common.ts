@@ -1,64 +1,60 @@
-'use strict';
+import Languages from "./Languages";
+import $ from "jquery";
 
-export const Common = {
-    PROXY_URL : 'https://miklcct.com/proxy/',
-    API_ENDPOINT : 'https://search.kmb.hk/KMBWebSite/Function/FunctionRequest.ashx',
+export default class Common {
+    public static readonly PROXY_URL = 'https://miklcct.com/proxy/';
+    public static readonly API_ENDPOINT = 'https://search.kmb.hk/KMBWebSite/Function/FunctionRequest.ashx';
 
-    /**
-     * Call the KMB API
-     *
-     * @param {object<string, string>} query The query string parameters, except the common "syscode" and "l"
-     * @return {Promise<object>}
-     */
-    callApi : async function (query) {
+    public static async callApi(query : Record<string, string>) : Promise<Record<string, unknown>> {
         return $.get(Common.API_ENDPOINT, query);
-    },
+    }
 
     /**
      * Get the stop ID in the query string
-     * @return {?string}
      */
-    getQueryStopId : function () {
+    public static getQueryStopId() : string | null {
         return (new URLSearchParams(window.location.search)).get('stop');
-    },
+    }
+
     /**
      * Get the selected route IDs and stop positions in the query string
-     * @return {Array<Array<string|int>>}
      */
-    getQuerySelections : function () {
+    public static getQuerySelections() : [string, number|null][]{
         return (new URLSearchParams(window.location.search)).getAll('selections').map(
-            function (/** String */ item) {
+            item => {
                 const segments = item.split(':');
                 return [segments[0], segments.length >= 2 ? Number(segments[1]) : null];
             }
         );
-    },
+    }
 
     /**
      * Get if "one departure" mode is selected
-     * @return {boolean}
      */
-    getQueryOneDeparture : function () {
+    public static getQueryOneDeparture() : boolean {
         return Boolean((new URLSearchParams(window.location.search)).get('one_departure'));
-    },
+    }
 
     /**
      * Get the language used in the document
-     * @returns {string}
      */
-    getLanguage() {
-        return $('html').attr('lang');
-    },
+    public static getLanguage() : keyof Languages {
+        return ($('html').attr('lang') ?? 'en') as keyof Languages;
+    }
+}
 
-    secret : null,
-};
+declare global {
+    // noinspection JSUnusedGlobalSymbols
+    interface String {
+        toTitleCase(): string;
+    }
+}
 
 /**
  * Convert string to title case
  *
  * FIXME: this is English only
- * @returns {string}
  */
 String.prototype.toTitleCase = function () {
     return this.toLowerCase().replace(/((^|[^a-z0-9'])+)(.)/g,  (match, p1, p2, p3) => p1 + p3.toUpperCase());
-}
+};

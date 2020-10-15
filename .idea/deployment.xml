@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="PublishConfigData">
+  <component name="PublishConfigData" serverName="KMB live" remoteFilesAllowedToDisappearOnAutoupload="false">
     <serverData>
-      <paths name="miklcct.com">
+      <paths name="KMB live">
         <serverdata>
           <mappings>
-            <mapping deploy="/html/kmb_eta" local="$PROJECT_DIR$" web="/kmb_eta" />
+            <mapping deploy="/" local="$PROJECT_DIR$/build/" web="/" />
           </mappings>
         </serverdata>
       </paths>

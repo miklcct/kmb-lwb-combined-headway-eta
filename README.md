@@ -30,9 +30,12 @@ serving the stop.
   e.g. choosing 71S at Kwong Fuk Playground, then choose Tai Po Market Station (TA10-T-1250-0),
   both stopping of 71S at that same pole will be selected automatically.
 
-## Installation
-No installation is needed. Clone the repository and open `index.xhtml`.
-It runs fully within the browser.
+## Setting up the project
+1. Run `npm install` to install the dependencies
+2. Run `npm run snowpack dev` to start a development server at `http://localhost:8080`
+3. When ready for deployment, run `npm run snowpack build` to compile the Javascript to be served
+4. Copy all files inside `dist` folder to the document root of the web server to deploy
+or run `index.html` directly in the browser without a web server.
 
 ## Usage
 1. Enter the route number.

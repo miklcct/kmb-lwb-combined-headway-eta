@@ -1,0 +1,25 @@
+{
+    "mount" : {
+        "src" : "/"
+    },
+    "buildOptions" : {
+        "sourceMaps" : true,
+        "clean" : true
+    },
+    "devOptions" : {
+        "open" : "none"
+    },
+    "installOptions" : {
+        "sourceMap" : true
+    },
+    "plugins": [
+        "@snowpack/plugin-typescript",
+        [
+            "@snowpack/plugin-run-script",
+            {
+                "cmd" : "eslint .",
+                "watch" : "watch \"$1\""
+            }
+        ]
+    ]
+}

@@ -2,8 +2,8 @@
 <project version="4">
   <component name="WebServers">
     <option name="servers">
-      <webServer id="1427ae80-2d43-41b6-a4ad-f7361dc8739d" name="miklcct.com" url="http://miklcct.com">
-        <fileTransfer rootFolder="/var/www/miklcct.com" accessType="SFTP" host="miklcct.com" port="22" sshConfigId="5e4337bd-3525-4109-b776-5446371ee9b1" sshConfig="miklcct.com" keyPair="true">
+      <webServer id="7471f1e5-2609-44df-a648-591641bd8e9d" name="KMB live" url="https://miklcct.com/kmb_eta">
+        <fileTransfer rootFolder="/var/www/miklcct.com/public_html/kmb_eta" accessType="SFTP" host="miklcct.com" port="22" sshConfigId="f0e443ef-e1ff-4789-98b4-c7f6ccac4869" sshConfig="michael@miklcct.com:22 key" keyPair="true">
           <advancedOptions>
             <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
           </advancedOptions>
