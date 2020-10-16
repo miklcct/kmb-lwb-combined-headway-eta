@@ -1,3 +1,6 @@
+## [1.9.0] (2020-10-16)
+* use module-based JS and async / await
+
 ## [1.8.3] (2020-10-01)
 * cache common route list
 
