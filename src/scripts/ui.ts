@@ -1,11 +1,5 @@
-import Route from "./Route";
-import Common from "./Common";
-import Stop from "./Stop";
-import StopRoute from "./StopRoute";
-import Eta from "./Eta";
-import Variant from "./Variant";
-import IncompleteStop from "./IncompleteStop";
 import $ from "jquery";
+import {Route, Variant, StopRoute, Common, Stop, Eta, IncompleteStop} from "js-kmb-api";
 
 declare global {
     interface Date {
