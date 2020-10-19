@@ -390,7 +390,8 @@ $(document).ready(
             }
             update_title(
                 route_numbers
-                , selected_stop !== undefined ? selected_stop.name : localStorage[Common.getQueryStopId() ?? ''] ?? null);
+                , selected_stop !== undefined ? selected_stop.name : localStorage[Common.getQueryStopId() ?? ''] ?? null
+            );
         }
 
         $stop_list.change(
