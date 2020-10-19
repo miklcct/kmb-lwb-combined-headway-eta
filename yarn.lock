@@ -1447,10 +1447,10 @@ jquery@^3.5.1:
   resolved "https://registry.yarnpkg.com/jquery/-/jquery-3.5.1.tgz#d7b4d08e1bfdb86ad2f1a3d039ea17304717abb5"
   integrity sha512-XwIBPqcMn57FxfT+Go5pzySnm4KWkT1Tv7gjrpT1srtf8Weynl6R273VJ5GjkRb51IzMp5nbaPjJXMWeju2MKg==
 
-js-kmb-api@^2.0.0-beta.1:
-  version "2.0.0-beta.1"
-  resolved "https://registry.yarnpkg.com/js-kmb-api/-/js-kmb-api-2.0.0-beta.1.tgz#5a801b7703599e73cf9aa0f75380614c7e8a1826"
-  integrity sha512-w+euRVDWB1c8lCHRXpKq55ZDc5sy0l/5GMApckX7hE8MiMe59lat62rzEpEZ0/QcOQz9Mnb80d5vLw4LrqrT3A==
+js-kmb-api@^2.0.0-beta.4:
+  version "2.0.0-beta.4"
+  resolved "https://registry.yarnpkg.com/js-kmb-api/-/js-kmb-api-2.0.0-beta.4.tgz#9b345c602a916a67f602cd2b56a9dfac37fcfc0f"
+  integrity sha512-VggsU6BRxrNN6Q1J5N5k9Z3hmjLF91PooJtxiU5sTI29uvGuwAWdy5fAtOuFfB7iehg+E/KfXJDDDI2S65rOwA==
   dependencies:
     aes-js "^3.1.2"
     global-jsdom "^7.0.0"
