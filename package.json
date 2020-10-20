@@ -2,9 +2,7 @@
   "devDependencies": {
     "@snowpack/plugin-run-script": "^2.1.5",
     "@snowpack/plugin-typescript": "^1.0.1",
-    "@types/aes-js": "^3.1.1",
     "@types/jquery": "^3.5.3",
-    "@types/node": "^14.11.8",
     "@typescript-eslint/eslint-plugin": "^4.4.1",
     "@typescript-eslint/parser": "^4.4.1",
     "eslint": "^7.11.0",
@@ -13,9 +11,8 @@
     "watch": "^1.0.2"
   },
   "dependencies": {
-    "aes-js": "^3.1.2",
     "jquery": "^3.5.1",
-    "js-kmb-api": "^2.0.0-beta.4"
+    "js-kmb-api": "^2.0.0-beta.5"
   },
   "scripts": {
     "build": "snowpack build",

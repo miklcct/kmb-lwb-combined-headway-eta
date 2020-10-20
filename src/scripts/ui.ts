@@ -1,5 +1,6 @@
 import $ from "jquery";
-import {Route, Variant, StopRoute, Common, Stop, Eta, IncompleteStop} from "js-kmb-api";
+import Kmb, {Eta, Route, Stop, StopRoute, Variant} from "js-kmb-api";
+import Common from "./Common";
 
 declare global {
     interface Date {
@@ -45,6 +46,8 @@ $(document).ready(
             localStorage['$VERSION'] = LOCAL_STORAGE_VERSION;
         }
 
+        const kmb = new Kmb(Common.getLanguage(), localStorage, sessionStorage);
+
         const $common_route_list = $('#common_route_list');
         const $route = $('#route');
         const $bound = $('#bound');
@@ -67,7 +70,7 @@ $(document).ready(
             $route.val(input);
             $switch_direction.attr('disabled', 'disabled');
             $variant_list.attr('disabled', 'disabled');
-            const bounds = await Route.getBounds(input);
+            const bounds = await kmb.getRoutes(input);
             if (bounds.length === 0) {
                 alert('Invalid route');
                 return;
@@ -76,10 +79,10 @@ $(document).ready(
                 $switch_direction.removeAttr('disabled');
             }
 
-            const model = new Route(input, Number($bound.val()));
+            const model = new kmb.Route(input, Number($bound.val()));
             $route.first().data('model', model);
             $direction.text('');
-            const variants = await Variant.get(model);
+            const variants = await model.getVariants();
             $variant_list.empty().append($('<option/>'));
             const sorted = variants.sort(
                 (a, b) => a.serviceType - b.serviceType
@@ -163,11 +166,11 @@ $(document).ready(
 
         $variant_list.change(
             async () => {
-                const variant = $('#variant_list option:checked').first().data('model');
+                const variant : Variant | undefined = $('#variant_list option:checked').first().data('model');
 
                 if (variant !== undefined) {
                     $stop_list.empty().attr('disabled', 'disabled');
-                    const stops = await Stop.get(variant);
+                    const stops = await variant.getStops();
                     $stop_list.empty().append($('<option/>'));
                     $stop_list.append(
                         stops
@@ -239,35 +242,32 @@ $(document).ready(
             $('#route_list_count').text(count);
         }
 
-        const update_common_route_list = (result: Record<string, StopRoute[]>) => {
+        const update_common_route_list = (result: StopRoute[]) => {
             $common_route_list.empty();
-            Object.values(result).sort(
+            const group_lengths = new Map(
+                result.map(stopRoute => stopRoute.variant.route.getRouteBound())
+                    .filter((value, index, array) => array.indexOf(value) === index)
+                    .map(id => [id, result.filter(stopRoute => stopRoute.variant.route.getRouteBound() === id).length])
+            );
+            result.sort(
                 (a, b) => {
-                    if (a.length === 0) {
-                        return b.length === 0 ? 0 : -1;
-                    }
-                    if (b.length === 0) {
-                        return 1;
-                    }
-                    return Route.compare(a[0].variant.route, b[0].variant.route);
+                    const route_result = kmb.Route.compare(a.variant.route, b.variant.route);
+                    return route_result === 0 ? a.sequence - b.sequence : route_result;
                 }
             )
                 .forEach(
-                    group => group
-                        .sort((a, b) => a.sequence - b.sequence)
-                        .forEach(
-                            stopRoute => {
-                                const $element = $('<option></option>').attr(
-                                    'value'
-                                    , `${stopRoute.variant.route.getRouteBound()}${group.length > 1 ? `:${stopRoute.sequence}` : ''}`
-                                )
-                                    .text(
-                                        `${stopRoute.variant.route.number} ${stopRoute.variant.getOriginDestinationString()} (${stopRoute.stop.id})`
-                                    )
-                                    .data('model', stopRoute);
-                                $common_route_list.append($element);
-                            }
+                    stopRoute => {
+                        const route_id = stopRoute.variant.route.getRouteBound();
+                        const $element = $('<option></option>').attr(
+                            'value'
+                            , `${route_id}${group_lengths.get(route_id) ?? 0 > 1 ? `:${stopRoute.sequence}` : ''}`
                         )
+                            .text(
+                                `${stopRoute.variant.route.number} ${stopRoute.variant.getOriginDestinationString()} (${stopRoute.stop.id})`
+                            )
+                            .data('model', stopRoute);
+                        $common_route_list.append($element);
+                    }
                 );
             const found_exact_matches : {[key : string] : StopRoute} = {};
             const query_selections = Common.getQuerySelections();
@@ -403,7 +403,7 @@ $(document).ready(
                         $common_route_list.empty().attr('disabled', 'disabled');
                         $eta_body.empty();
                         ++update_eta.batch;
-                        const result = await StopRoute.get(stop, update_route_progress);
+                        const result = await stop.getStopRoutes(update_route_progress);
                         update_common_route_list(result);
                         $common_route_list.data('stop_id', stop.id);
                     } else {
@@ -456,15 +456,15 @@ $(document).ready(
             const filtered_etas = (await Promise.all(
                 $('#common_route_list option:checked').map(
                     function () {
-                        const model = $(this).data('model');
+                        const model : StopRoute | undefined = $(this).data('model');
                         return model !== undefined
-                            ? Eta.get(model)
+                            ? model.getEtas()
                             : [];
                     }
                 )
             ))
                 .flat()
-                .sort(Eta.compare)
+                .sort(kmb.Eta.compare)
                 .filter(
                     // filter only entries from one minute past now
                     /** Eta */ eta => eta.time.getTime() - now >= -60 * 1000
@@ -518,7 +518,7 @@ $(document).ready(
                 $one_departure.removeAttr('checked');
             }
 
-            const stop = stop_id !== null ? new IncompleteStop(stop_id) : null;
+            const stop = stop_id !== null ? new kmb.IncompleteStop(stop_id) : null;
             update_title(
                 Common.getQuerySelections().map(
                     selection => selection[0].split('-')[0]
@@ -527,7 +527,7 @@ $(document).ready(
             );
 
             if (stop !== null) {
-                const results = await StopRoute.get(stop, update_route_progress);
+                const results = await stop.getStopRoutes(update_route_progress);
                 update_common_route_list(results);
                 $common_route_list.data('stop_id', stop_id);
             }
