@@ -10,7 +10,8 @@
         "open" : "none"
     },
     "installOptions" : {
-        "sourceMap" : true
+        "sourceMap" : true,
+        "polyfillNode" : true
     },
     "plugins": [
         "@snowpack/plugin-typescript",

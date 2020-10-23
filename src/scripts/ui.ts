@@ -1,5 +1,5 @@
 import $ from "jquery";
-import Kmb, {Eta, Route, Stop, StopRoute, Variant} from "js-kmb-api";
+import Kmb, {Eta, Route, Stopping, Variant} from "js-kmb-api";
 import Common from "./Common";
 
 declare global {
@@ -26,19 +26,6 @@ Date.prototype.hhmmss = function () {
     return `${pad(this.getHours())}:${pad(this.getMinutes())}:${pad(this.getSeconds())}`;
 };
 
-(() =>
-    $(document).ajaxError(
-        (event, jqXHR, ajaxSettings) => {
-            if (jqXHR.readyState === 4 && jqXHR.status < 500 && jqXHR.status !== 429 && jqXHR.status !== 403) {
-                const $failure = $('#failure');
-                $failure.append($('<span/>').text(`AJAX call to ${ajaxSettings.url} failed: ${jqXHR.status}`.trim()))
-                    .append($('<br/>'));
-                $failure.css('display', 'block');
-                debugger;
-            }
-        }
-    ))();
-
 $(document).ready(
     () => {
         if (Number(localStorage['$VERSION']) !== LOCAL_STORAGE_VERSION) {
@@ -46,7 +33,7 @@ $(document).ready(
             localStorage['$VERSION'] = LOCAL_STORAGE_VERSION;
         }
 
-        const kmb = new Kmb(Common.getLanguage(), localStorage, sessionStorage);
+        const kmb = new Kmb(Common.getLanguage(), localStorage, sessionStorage, 'https://miklcct.com/proxy/');
 
         const $common_route_list = $('#common_route_list');
         const $route = $('#route');
@@ -98,7 +85,7 @@ $(document).ready(
                     $.each(
                         $common_route_list.children()
                         , function () {
-                            const model : StopRoute | undefined = $(this).data('model');
+                            const model = $(this).data('model') as Stopping | undefined;
                             if (
                                 model !== undefined
                                 && model.variant.route.getRouteBound() === variant.route.getRouteBound()
@@ -119,7 +106,7 @@ $(document).ready(
             () => {
                 const input = ($route.val() as string).toUpperCase();
                 if (click_route.eta !== null) {
-                    $bound.val(click_route.eta.stopRoute.variant.route.bound);
+                    $bound.val(click_route.eta.stopping.variant.route.bound);
                     click_route.eta = null;
                 } else {
                     let bound = null;
@@ -136,7 +123,7 @@ $(document).ready(
                         $.each(
                             $common_route_list.children()
                             , function () {
-                                const model : StopRoute | undefined = $(this).data('model');
+                                const model = $(this).data('model') as Stopping | undefined;
                                 if (model !== undefined) {
                                     if (model.variant.route.number === input) {
                                         in_common_route_list = true;
@@ -152,7 +139,7 @@ $(document).ready(
                         $bound.val(bound);
                     }
                 }
-                change_route();
+                void change_route();
                 return false;
             }
         );
@@ -160,33 +147,33 @@ $(document).ready(
         $switch_direction.click(
             () => {
                 $bound.val(3 - Number($bound.val())); // switch between 1 and 2
-                change_route();
+                void change_route();
             }
         );
 
         $variant_list.change(
             async () => {
-                const variant : Variant | undefined = $('#variant_list option:checked').first().data('model');
+                const variant = $('#variant_list option:checked').first().data('model') as Variant | undefined;
 
                 if (variant !== undefined) {
                     $stop_list.empty().attr('disabled', 'disabled');
-                    const stops = await variant.getStops();
+                    const stoppings = await variant.getStoppings();
                     $stop_list.empty().append($('<option/>'));
                     $stop_list.append(
-                        stops
+                        stoppings
                             .sort((a, b) => a.sequence - b.sequence)
                             .map(
-                                stop => $('<option></option>').attr('value', stop.id)
-                                    .text(`${stop.sequence} ${stop.name} (${stop.id})`)
-                                    .data('sequence', stop.sequence)
-                                    .data('model', stop)
+                                stopping => $('<option></option>').attr('value', stopping.stop.id)
+                                    .text(`${stopping.sequence} ${stopping.stop.name ?? ''} (${stopping.stop.id})`)
+                                    .data('sequence', stopping.sequence)
+                                    .data('model', stopping)
                             )
                     ).removeAttr('disabled');
                     const query_stop_id = Common.getQueryStopId();
                     if (query_stop_id !== null) {
                         const chosen_route = (
                             () => {
-                                const model : Route | undefined = $route.data('model');
+                                const model = $route.data('model') as Route | undefined;
                                 return model !== undefined ? model.getRouteBound() : null;
                             }
                         )();
@@ -209,7 +196,7 @@ $(document).ready(
                             $.each(
                                 $common_route_list.children()
                                 , function () {
-                                    const model : StopRoute | undefined = $(this).data('model');
+                                    const model = $(this).data('model') as Stopping | undefined;
                                     if (model !== undefined) {
                                         if (model.variant.route.getRouteBound() === chosen_route) {
                                             $stop_list.val(model.stop.id);
@@ -242,12 +229,12 @@ $(document).ready(
             $('#route_list_count').text(count);
         }
 
-        const update_common_route_list = (result: StopRoute[]) => {
+        const update_common_route_list = (result: Stopping[]) => {
             $common_route_list.empty();
             const group_lengths = new Map(
-                result.map(stopRoute => stopRoute.variant.route.getRouteBound())
+                result.map(stopping => stopping.variant.route.getRouteBound())
                     .filter((value, index, array) => array.indexOf(value) === index)
-                    .map(id => [id, result.filter(stopRoute => stopRoute.variant.route.getRouteBound() === id).length])
+                    .map(id => [id, result.filter(stopping => stopping.variant.route.getRouteBound() === id).length])
             );
             result.sort(
                 (a, b) => {
@@ -256,52 +243,52 @@ $(document).ready(
                 }
             )
                 .forEach(
-                    stopRoute => {
-                        const route_id = stopRoute.variant.route.getRouteBound();
+                    stopping => {
+                        const route_id = stopping.variant.route.getRouteBound();
                         const $element = $('<option></option>').attr(
                             'value'
-                            , `${route_id}${group_lengths.get(route_id) ?? 0 > 1 ? `:${stopRoute.sequence}` : ''}`
+                            , `${route_id}${(group_lengths.get(route_id) ?? 0) > 1 ? `:${stopping.sequence}` : ''}`
                         )
                             .text(
-                                `${stopRoute.variant.route.number} ${stopRoute.variant.getOriginDestinationString()} (${stopRoute.stop.id})`
+                                `${stopping.variant.route.number} ${stopping.variant.getOriginDestinationString()} (${stopping.stop.id})`
                             )
-                            .data('model', stopRoute);
+                            .data('model', stopping);
                         $common_route_list.append($element);
                     }
                 );
-            const found_exact_matches : {[key : string] : StopRoute} = {};
+            const found_exact_matches : {[key : string] : Stopping} = {};
             const query_selections = Common.getQuerySelections();
             for (let i = 0; i < 2; ++i) {
                 $.each(
                     $common_route_list.children()
                     , function () {
                         const $this = $(this);
-                        const stopRoute : StopRoute | undefined = $this.data('model');
-                        if (stopRoute !== undefined) {
+                        const stopping = $this.data('model') as Stopping | undefined;
+                        if (stopping !== undefined) {
                             const $stop = $('#stop_list option:checked').first();
-                            const stop : Stop | undefined = $stop.data('model');
-                            const stop_id = stop?.id ?? Common.getQueryStopId();
+                            const stop = $stop.data('model') as Stopping | undefined;
+                            const stop_id = stop?.stop?.id ?? Common.getQueryStopId();
                             if (
                                 query_selections.find(
-                                    selection => selection[0] === stopRoute.variant.route.getRouteBound()
-                                        && (selection[1] === null || selection[1] === stopRoute.sequence)
+                                    selection => selection[0] === stopping.variant.route.getRouteBound()
+                                        && (selection[1] === null || selection[1] === stopping.sequence)
                                         && (
-                                            stopRoute.stop.id === stop_id
-                                            || i && !Object.prototype.hasOwnProperty.call(found_exact_matches, stopRoute.variant.route.getRouteBound())
+                                            stopping.stop.id === stop_id
+                                            || i && !Object.prototype.hasOwnProperty.call(found_exact_matches, stopping.variant.route.getRouteBound())
                                         )
                                 ) !== undefined
                                 ||
-                                stopRoute.variant.route.number === $route.val()
-                                && stopRoute.variant.route.bound === Number($bound.val())
-                                && stopRoute.stop.id === stop_id
+                                stopping.variant.route.number === $route.val()
+                                && stopping.variant.route.bound === Number($bound.val())
+                                && stopping.stop.id === stop_id
                                 && (
-                                    stopRoute.variant.serviceType !== Number($variant_list.val())
-                                    || stopRoute.sequence === $stop.data('sequence')
+                                    stopping.variant.serviceType !== Number($variant_list.val())
+                                    || stopping.sequence === $stop.data('sequence')
                                 )
                             ) {
                                 $this.attr('selected', 'selected');
-                                if (stopRoute.stop.id === stop_id) {
-                                    found_exact_matches[stopRoute.variant.route.getRouteBound()] = stopRoute;
+                                if (stopping.stop.id === stop_id) {
+                                    found_exact_matches[stopping.variant.route.getRouteBound()] = stopping;
                                 }
                             }
                         }
@@ -341,8 +328,9 @@ $(document).ready(
 
         function save_state() {
             const query = new URLSearchParams($('#form').serialize());
-            if (query.get('stop') === null && Common.getQueryStopId() !== null) {
-                query.append('stop', String(Common.getQueryStopId()));
+            const query_stop_id = Common.getQueryStopId();
+            if (query.get('stop') === null && query_stop_id !== null) {
+                query.append('stop', String(query_stop_id));
             }
             // merge existing query apart from those three
             const original_query = new URLSearchParams(window.location.search);
@@ -357,12 +345,12 @@ $(document).ready(
             const route_numbers = $('#common_route_list option:checked')
                 .map(
                     function () {
-                        const stopRoute : StopRoute = $(this).data('model');
-                        return stopRoute.variant.route.number;
+                        const stopping = $(this).data('model') as Stopping;
+                        return stopping.variant.route.number;
                     }
                 )
                 .get();
-            const selected_stop : Stop | undefined = $('#stop_list option:checked').first().data('model');
+            const selected_stop = $('#stop_list option:checked').first().data('model') as Stopping | undefined;
             const compare = (a: URLSearchParams, b: URLSearchParams) => {
                 // only handle stop, selections and one_departure
                 if (a.get('stop') === b.get('stop') && a.get('one_departure') === b.get('one_departure')) {
@@ -390,36 +378,39 @@ $(document).ready(
             }
             update_title(
                 route_numbers
-                , selected_stop !== undefined ? selected_stop.name : localStorage[Common.getQueryStopId() ?? ''] ?? null
+                , (
+                    selected_stop !== undefined ? selected_stop.stop.name :
+                        query_stop_id !== null ? new kmb.Stop(query_stop_id).name : null
+                ) ?? null
             );
         }
 
         $stop_list.change(
             async () => {
-                const stop : Stop|undefined = $('#stop_list option:checked').first().data('model');
-                const selected_variant : Variant|undefined = $('#variant_list option:checked').first().data('model');
-                if (stop !== undefined) {
-                    if ($common_route_list.data('stop_id') !== stop.id) {
+                const stopping = $('#stop_list option:checked').first().data('model') as Stopping|undefined;
+                const selected_variant = $('#variant_list option:checked').first().data('model') as Variant|undefined;
+                if (stopping !== undefined) {
+                    if ($common_route_list.data('stop_id') !== stopping.stop.id) {
                         $common_route_list.empty().attr('disabled', 'disabled');
                         $eta_body.empty();
                         ++update_eta.batch;
-                        const result = await stop.getStopRoutes(update_route_progress);
+                        const result = await stopping.stop.getStoppings(false, update_route_progress);
                         update_common_route_list(result);
-                        $common_route_list.data('stop_id', stop.id);
+                        $common_route_list.data('stop_id', stopping.stop.id);
                     } else {
-                        const selected_route : Route|undefined = $route.first().data('model');
+                        const selected_route = $route.first().data('model') as Route|undefined;
                         if (selected_route !== undefined) {
                             let exact_match_found = false;
                             for (let i = 0; i < 2; ++i) {
                                 $.each(
                                     $common_route_list.children()
                                     , function () {
-                                        const model : StopRoute|undefined = $(this).data('model');
+                                        const model = $(this).data('model') as Stopping|undefined;
                                         if (model !== undefined) {
-                                            const exact_match = model.stop.id === stop.id
+                                            const exact_match = model.stop.id === stopping.stop.id
                                                 && (
                                                     selected_variant?.serviceType !== model.variant.serviceType
-                                                    || model.sequence === stop.sequence
+                                                    || model.sequence === stopping.sequence
                                                 );
                                             if (model.variant.route.getRouteBound() === selected_route.getRouteBound() && (exact_match || i && !exact_match_found)) {
                                                 $(this).attr('selected', 'selected');
@@ -439,10 +430,10 @@ $(document).ready(
         );
 
         const click_route : {() : void, eta : Eta | null} = function (this : Element) {
-            const eta = $(this).closest('tr').data('model');
+            const eta = $(this).closest('tr').data('model') as Eta|undefined;
             if (eta !== undefined) {
                 click_route.eta = eta;
-                $route.val(eta.stopRoute.variant.route.number);
+                $route.val(eta.stopping.variant.route.number);
                 $route_submit.click();
             }
         };
@@ -456,7 +447,7 @@ $(document).ready(
             const filtered_etas = (await Promise.all(
                 $('#common_route_list option:checked').map(
                     function () {
-                        const model : StopRoute | undefined = $(this).data('model');
+                        const model = $(this).data('model') as Stopping | undefined;
                         return model !== undefined
                             ? model.getEtas()
                             : [];
@@ -464,15 +455,15 @@ $(document).ready(
                 )
             ))
                 .flat()
-                .sort(kmb.Eta.compare)
+                .sort(kmb.Eta.compare.bind(undefined))
                 .filter(
                     // filter only entries from one minute past now
-                    /** Eta */ eta => eta.time.getTime() - now >= -60 * 1000
+                    eta => eta.time.getTime() - now >= -60 * 1000
                 );
             if (batch === update_eta.batch) {
                 const get_eta_row = (eta: Eta) => $('<tr/>')
                     .append($('<td/>').text(eta.time === null ? '' : eta.time.hhmm()).css('font-weight', eta.realTime ? 'bold' : ''))
-                    .append($('<td/>').append($('<span class="route"/>').text(eta.stopRoute.variant.route.number).click(click_route)))
+                    .append($('<td/>').append($('<span class="route"/>').text(eta.stopping.variant.route.number).click(click_route)))
                     .append($('<td/>').text(eta.distance ?? ''))
                     .append($('<td/>').text(eta.remark))
                     .data('model', eta);
@@ -481,9 +472,9 @@ $(document).ready(
                     const shown_variants : Route[] = [];
                     filtered_etas.forEach(
                         eta => {
-                            if (!shown_variants.includes(eta.stopRoute.variant.route)) {
+                            if (!shown_variants.includes(eta.stopping.variant.route)) {
                                 $eta_body.append(get_eta_row(eta));
-                                shown_variants.push(eta.stopRoute.variant.route);
+                                shown_variants.push(eta.stopping.variant.route);
                             }
                         }
                     );
@@ -495,11 +486,11 @@ $(document).ready(
             }
         };
         update_eta.batch = 0;
-        setInterval(update_eta, 15000);
+        setInterval(() => void update_eta(), 15000);
 
         const update = () => {
             save_state();
-            update_eta();
+            void update_eta();
         };
         $common_route_list.change(update);
         $one_departure.change(update);
@@ -518,7 +509,7 @@ $(document).ready(
                 $one_departure.removeAttr('checked');
             }
 
-            const stop = stop_id !== null ? new kmb.IncompleteStop(stop_id) : null;
+            const stop = stop_id !== null ? new kmb.Stop(stop_id) : null;
             update_title(
                 Common.getQuerySelections().map(
                     selection => selection[0].split('-')[0]
@@ -527,14 +518,14 @@ $(document).ready(
             );
 
             if (stop !== null) {
-                const results = await stop.getStopRoutes(update_route_progress);
+                const results = await stop.getStoppings(false, update_route_progress);
                 update_common_route_list(results);
                 $common_route_list.data('stop_id', stop_id);
             }
         }
 
-        window.addEventListener('popstate', init);
+        window.addEventListener('popstate', () => void init());
 
-        init();
+        void init();
     }
 );
