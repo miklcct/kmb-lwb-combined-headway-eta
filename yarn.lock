@@ -372,6 +372,11 @@ argparse@^1.0.7:
   dependencies:
     sprintf-js "~1.0.2"
 
+array-flat-polyfill@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/array-flat-polyfill/-/array-flat-polyfill-1.0.1.tgz#1e3a4255be619dfbffbfd1d635c1cf357cd034e7"
+  integrity sha512-hfJmKupmQN0lwi0xG6FQ5U8Rd97RnIERplymOv/qpq8AoNKPPAnxJadjFA23FNWm88wykh9HmpLJUUwUtNU/iw==
+
 array-union@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/array-union/-/array-union-2.1.0.tgz#b798420adbeb1de828d84acd8a2e23d3efe85e8d"
@@ -1237,13 +1242,14 @@ jquery@^3.5.1:
   resolved "https://registry.yarnpkg.com/jquery/-/jquery-3.5.1.tgz#d7b4d08e1bfdb86ad2f1a3d039ea17304717abb5"
   integrity sha512-XwIBPqcMn57FxfT+Go5pzySnm4KWkT1Tv7gjrpT1srtf8Weynl6R273VJ5GjkRb51IzMp5nbaPjJXMWeju2MKg==
 
-js-kmb-api@^2.0.0-beta.10:
-  version "2.0.0-beta.10"
-  resolved "https://registry.yarnpkg.com/js-kmb-api/-/js-kmb-api-2.0.0-beta.10.tgz#6277fb77cab05ab110c3335a95a6f2b27f802194"
-  integrity sha512-g7yfjoGjWpN9UX7+4CA8eXrq8IluVYR4avWQHzP8V/GtQot6h2lve8xUnTHdsfeiyd7lKdrO/JUi9gj+JvwAJg==
+js-kmb-api@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/js-kmb-api/-/js-kmb-api-2.0.0.tgz#b55a4471f9fcd6c14b40a4f3221b7c3b82c2211c"
+  integrity sha512-WrcbmS/N2/RLNzwzNSVspROks8iU/uy9rAhOitw6WWOnkYHLsgk84NJ0m+e9x+am6mLy8clZigQmnG7B4+Re3A==
   dependencies:
     "@types/node" "^14.14.2"
     aes-js "^3.1.2"
+    array-flat-polyfill "^1.0.1"
     axios "^0.20.0"
     node-storage-shim "^2.0.1"
     ssl-root-cas "^1.3.1"
