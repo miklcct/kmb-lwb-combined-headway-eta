@@ -9,7 +9,6 @@ declare global {
     }
 }
 
-const LOCAL_STORAGE_VERSION = 1; // update this when local storage used is no longer compatible
 
 function pad(number : number) : string {
     if (number < 10) {
@@ -28,11 +27,6 @@ Date.prototype.hhmmss = function () {
 
 $(document).ready(
     () => {
-        if (Number(localStorage['$VERSION']) !== LOCAL_STORAGE_VERSION) {
-            localStorage.clear();
-            localStorage['$VERSION'] = LOCAL_STORAGE_VERSION;
-        }
-
         const kmb = new Kmb(Common.getLanguage(), localStorage, sessionStorage, 'https://miklcct.com/proxy/');
 
         const $common_route_list = $('#common_route_list');
