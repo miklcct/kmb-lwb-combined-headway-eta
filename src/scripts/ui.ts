@@ -438,45 +438,58 @@ $(document).ready(
             const batch = ++update_eta.batch;
 
             const now = Date.now();
-            const filtered_etas = (await Promise.all(
-                $('#common_route_list option:checked').map(
-                    function () {
-                        const model = $(this).data('model') as Stopping | undefined;
-                        return model !== undefined
-                            ? model.getEtas()
-                            : [];
-                    }
-                )
-            ))
-                .flat()
-                .sort(kmb.Eta.compare.bind(undefined))
-                .filter(
-                    // filter only entries from one minute past now
-                    eta => eta.time.getTime() - now >= -60 * 1000
-                );
-            if (batch === update_eta.batch) {
-                const get_eta_row = (eta: Eta) => $('<tr/>')
-                    .append($('<td/>').text(eta.time === null ? '' : eta.time.hhmm()).css('font-weight', eta.realTime ? 'bold' : ''))
-                    .append($('<td/>').append($('<span class="route"/>').text(eta.stopping.variant.route.number).click(click_route)))
-                    .append($('<td/>').text(eta.distance ?? ''))
-                    .append($('<td/>').text(eta.remark))
-                    .data('model', eta);
-                $eta_body.empty();
-                if (Common.getQueryOneDeparture()) {
-                    const shown_variants : Route[] = [];
-                    filtered_etas.forEach(
-                        eta => {
-                            if (!shown_variants.includes(eta.stopping.variant.route)) {
-                                $eta_body.append(get_eta_row(eta));
-                                shown_variants.push(eta.stopping.variant.route);
+            try {
+                const filtered_etas = (
+                    await Promise.all(
+                        $('#common_route_list option:checked').map(
+                            function () {
+                                const model = $(this).data('model') as Stopping | undefined;
+                                return model !== undefined
+                                    ? model.getEtas()
+                                    : [];
                             }
-                        }
+                        )
+                    )
+                )
+                    .flat()
+                    .sort(kmb.Eta.compare.bind(undefined))
+                    .filter(
+                        // filter only entries from one minute past now
+                        eta => eta.time.getTime() - now >= -60 * 1000
                     );
-                } else {
-                    $eta_body.append(filtered_etas.slice(0, 3).map(get_eta_row));
+                if (batch === update_eta.batch) {
+                    const get_eta_row = (eta : Eta) => $('<tr/>')
+                        .append($('<td/>')
+                            .text(eta.time === null ? '' : eta.time.hhmm())
+                            .css('font-weight', eta.realTime ? 'bold' : ''))
+                        .append($('<td/>')
+                            .append($('<span class="route"/>')
+                                .text(eta.stopping.variant.route.number)
+                                .click(click_route)))
+                        .append($('<td/>').text(eta.distance ?? ''))
+                        .append($('<td/>').text(eta.remark))
+                        .data('model', eta);
+                    $eta_body.empty();
+                    if (Common.getQueryOneDeparture()) {
+                        const shown_variants : Route[] = [];
+                        filtered_etas.forEach(
+                            eta => {
+                                if (!shown_variants.includes(eta.stopping.variant.route)) {
+                                    $eta_body.append(get_eta_row(eta));
+                                    shown_variants.push(eta.stopping.variant.route);
+                                }
+                            }
+                        );
+                    } else {
+                        $eta_body.append(filtered_etas.slice(0, 3).map(get_eta_row));
+                    }
+                    $eta_loading.css('visibility', 'hidden');
+                    $eta_last_updated.text((
+                        new Date
+                    ).hhmmss());
                 }
-                $eta_loading.css('visibility', 'hidden');
-                $eta_last_updated.text((new Date).hhmmss());
+            } catch (e) {
+                $('#failure').css('display', 'block').text(e);
             }
         };
         update_eta.batch = 0;
