@@ -10,19 +10,19 @@ declare global {
 }
 
 
-function pad(number : number) : string {
-    if (number < 10) {
-        return `0${number}`;
-    }
-    return String(number);
-}
-
 Date.prototype.hhmm = function () {
-    return `${pad(this.getHours())}:${pad(this.getMinutes())}`;
+    return this.toLocaleString(
+        []
+        , {timeZone : 'Asia/Hong_Kong', hour : "2-digit", minute : "2-digit"}
+    );
+        //`${pad(this.getHours())}:${pad(this.getMinutes())}`;
 };
 
 Date.prototype.hhmmss = function () {
-    return `${pad(this.getHours())}:${pad(this.getMinutes())}:${pad(this.getSeconds())}`;
+    return this.toLocaleString(
+        []
+        , {timeZone : 'Asia/Hong_Kong', hour : "2-digit", minute : "2-digit", second : "2-digit"}
+    );
 };
 
 $(document).ready(
