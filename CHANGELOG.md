@@ -1,3 +1,8 @@
+## [2.0.0] (2022-03-28)
+* split library into separate package js-kmb-api
+* fix HTML errors
+* use Hong Kong time in the UI
+
 ## [1.9.0] (2020-10-16)
 * use module-based JS and async / await
 
