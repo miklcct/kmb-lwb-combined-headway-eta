@@ -489,7 +489,8 @@ $(document).ready(
                     ).hhmmss());
                 }
             } catch (e) {
-                $('#failure').css('display', 'block').text(e);
+                $('#failure').css('display', 'block')
+                    .text(e instanceof Error ? e.message : 'An error occurred');
             }
         };
         update_eta.batch = 0;
