@@ -3,7 +3,7 @@ This is an interface for the KMB / LWB ETA API which allows choosing a stop,
 and shows the ETA of the upcoming 3 departures combined from a set of routes
 serving the stop.
 
-[There is also a sister project for Citybus & NWFB available.](https://github.com/miklcct/ctb-nwfb-combined-headway-eta)
+[//]: # ([There is also a sister project for Citybus & NWFB available.]&#40;https://github.com/miklcct/ctb-nwfb-combined-headway-eta&#41;)
 
 ## Features
 * ETA automatically refreshes every 15 seconds.
