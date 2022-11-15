@@ -73,3 +73,11 @@ fabric.properties
 /node_modules/
 /web_modules/
 /build/
+
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
